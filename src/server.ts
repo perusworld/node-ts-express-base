@@ -1,4 +1,3 @@
-import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as path from "path";
 
@@ -87,10 +86,10 @@ export class Server {
     this.app.set("view engine", "pug");
 
     //mount json form parser
-    this.app.use(bodyParser.json());
+    this.app.use(express.json());
 
     //mount query string parser
-    this.app.use(bodyParser.urlencoded({
+    this.app.use(express.urlencoded({
       extended: true
     }));
 
