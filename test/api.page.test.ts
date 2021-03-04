@@ -1,7 +1,16 @@
 export { };
 let request = require("supertest");
 let server = require("../src/server");
-let app = server.Server.bootstrap().app;
+let serverInstance = server.Server.bootstrap();
+let app = serverInstance.app;
+
+beforeAll(() => {
+  return serverInstance.init();
+});
+
+afterAll(() => {
+  return serverInstance.cleanup();
+});
 
 describe("Test the api hello", () => {
   test("It should call api hello", done => {

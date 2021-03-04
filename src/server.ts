@@ -35,15 +35,28 @@ export class Server {
     //create expressjs application
     this.app = express();
 
-    //configure application
-    this.config();
-
-    //add controller
-    this.controller();
-
-    //add api
-    this.api();
   }
+
+  public init(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      //configure application
+      this.config();
+
+      //add controller
+      this.controller();
+
+      //add api
+      this.api();
+      resolve(true);
+    });
+  }
+
+  public cleanup(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      resolve(true);
+    });
+  }
+
 
   /**
    * Create Controller View routes

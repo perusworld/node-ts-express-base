@@ -9,20 +9,31 @@ var http = require("http");
 //create http server
 var httpPort = normalizePort(process.env.PORT || 3000);
 console.log('Using port', httpPort);
+var ctx = {};
 
-var app = server.Server.bootstrap().app;
-app.set("port", httpPort);
-var httpServer = http.createServer(app);
+var serverInstance = server.Server.bootstrap();
+serverInstance.init().then(done => {
+  if (done) {
+    console.log('Server initialised.');
+    var app = serverInstance.app;
+    app.set("port", httpPort);
+    var httpServer = http.createServer(app);
+    ctx.httpServer = httpServer;
 
-//listen on provided ports
-httpServer.listen(httpPort);
+    //listen on provided ports
+    httpServer.listen(httpPort);
 
-//add error handler
-httpServer.on("error", onError);
+    //add error handler
+    httpServer.on("error", onError);
 
-//start listening on port
-httpServer.on("listening", onListening);
-
+    //start listening on port
+    httpServer.on("listening", onListening);
+  } else {
+    console.error('Server initialization failed');
+  }
+}).catch(err => {
+  console.error('Failed to start server', err);
+})
 
 /**
  * Normalize a port into a number, string, or false.
@@ -74,7 +85,7 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 function onListening() {
-  var addr = httpServer.address();
+  var addr = ctx.httpServer.address();
   var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   debug("Listening on " + bind);
 }
