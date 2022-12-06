@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-
+import { v4 as uuidv4 } from 'uuid';
 
 export class APIRoute {
 
@@ -16,7 +16,8 @@ export class APIRoute {
     console.log('Got', JSON.stringify(req.body, null, 2));
     res.json({
       msg: 'hi there v1',
-      youSent: req.body
+      youSent: req.body,
+      uuid: uuidv4(),
     })
   }
 

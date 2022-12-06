@@ -1,5 +1,6 @@
 import * as express from "express";
 import * as path from "path";
+import * as cors from 'cors';
 
 import { APIRoute } from "./api";
 import { ControllerRoute } from "./controller";
@@ -91,6 +92,7 @@ export class Server {
    * @method config
    */
   public config() {
+    this.app.use(cors());
     //add static paths
     this.app.use(express.static(path.join(__dirname, "../public")));
 

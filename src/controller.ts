@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-
+import { v4 as uuidv4 } from 'uuid';
 
 export class ControllerRoute {
 
@@ -16,7 +16,8 @@ export class ControllerRoute {
     console.log('Got', req.query);
     res.render("hello", {
       msg: "Hello From Controller",
-      ts: new Date()
+      ts: new Date(),
+      uuid: uuidv4(),
     })
   }
 
