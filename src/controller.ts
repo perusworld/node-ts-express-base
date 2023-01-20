@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { v4 as uuidv4 } from 'uuid';
+import { getLogger } from "./util";
+
+const logger = getLogger('ControllerRoute');
 
 export class ControllerRoute {
 
@@ -13,7 +16,7 @@ export class ControllerRoute {
   }
 
   public hello(req: Request, res: Response, next: NextFunction) {
-    console.log('Got', req.query);
+    logger.debug('Got %s', req.query);
     res.render("hello", {
       msg: "Hello From Controller",
       ts: new Date(),
@@ -25,7 +28,7 @@ export class ControllerRoute {
    * buildRoutes
    */
   public buildRoutes(router: Router) {
-    console.log("[ControllerRoute::create] Creating controller route.");
+    logger.debug("[ControllerRoute::create] Creating controller route.");
 
     router.use((req: Request, res: Response, next: NextFunction) => {
       //TODO: Your API Request Authentication Logic

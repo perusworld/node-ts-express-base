@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { v4 as uuidv4 } from 'uuid';
+import { getLogger } from "./util";
+
+const logger = getLogger('APIRoute');
 
 export class APIRoute {
 
@@ -13,7 +16,7 @@ export class APIRoute {
   }
 
   public hello(req: Request, res: Response, next: NextFunction) {
-    console.log('Got', JSON.stringify(req.body, null, 2));
+    logger.debug('Got %s', JSON.stringify(req.body, null, 2));
     res.json({
       msg: 'hi there v1',
       youSent: req.body,
@@ -25,7 +28,7 @@ export class APIRoute {
    * buildRoutes
    */
   public buildRoutes(router: Router) {
-    console.log("[APIRoute::create] Creating api route.");
+    logger.debug("[APIRoute::create] Creating api route.");
 
     router.use((req: Request, res: Response, next: NextFunction) => {
       //TODO: Your API Request Authentication Logic
