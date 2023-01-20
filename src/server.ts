@@ -38,24 +38,28 @@ export class Server {
 
   }
 
-  public init(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      //configure application
-      this.config();
+  public async init(): Promise<boolean> {
+    let ret = false;
+    //configure application
+    this.config();
 
-      //add controller
-      this.controller();
+    //add controller
+    this.controller();
 
-      //add api
-      this.api();
-      resolve(true);
-    });
+    //add api
+    this.api();
+
+    ret = await this.tasks();
+    
+    return ret;
   }
 
-  public cleanup(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      resolve(true);
-    });
+  public async cleanup(): Promise<boolean> {
+    return true;
+  }
+
+  public async tasks(): Promise<boolean> {
+    return true;
   }
 
 
