@@ -21,7 +21,7 @@ describe("Test the api hello", () => {
       .expect(200)
       .expect('Content-Type', /json/)
       .then((res: any) => {
-        expect(res.body.msg).toBe('hi there v1');
+        expect(res.body.msg).toBe('hi there');
         expect(res.body.youSent).toMatchObject({ msg: 'hi' });
         done();
       })
