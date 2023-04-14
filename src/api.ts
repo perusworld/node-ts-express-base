@@ -18,7 +18,7 @@ export class APIRoute {
   public hello(req: Request, res: Response, next: NextFunction) {
     logger.debug('Got %s', JSON.stringify(req.body, null, 2));
     res.json({
-      msg: 'hi there v1',
+      msg: 'hi there',
       youSent: req.body,
       uuid: uuidv4(),
     })
