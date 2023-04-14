@@ -5,6 +5,9 @@ import * as cors from 'cors';
 import { APIRoute } from "./api";
 import { ControllerRoute } from "./controller";
 
+import { Socket } from "socket.io";
+import { IOHandler } from "./io";
+
 /**
  * The server.
  *
@@ -13,6 +16,7 @@ import { ControllerRoute } from "./controller";
 export class Server {
 
   public app: express.Application;
+  public ioHandler: IOHandler;
 
   /**
    * Bootstrap the application.
@@ -35,6 +39,7 @@ export class Server {
   constructor() {
     //create expressjs application
     this.app = express();
+    this.ioHandler = new IOHandler();
 
   }
 
@@ -119,6 +124,13 @@ export class Server {
       next(err);
     });
 
+  }
+
+  /**
+   * handleSocketIO
+   */
+  public async handleSocketIO(socket: Socket) : Promise<boolean> {
+    return this.ioHandler.handle(socket);
   }
 
 }

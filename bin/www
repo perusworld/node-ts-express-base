@@ -12,6 +12,8 @@ var http = require("http");
 var httpPort = normalizePort(process.env.PORT || 3000);
 console.log('Using port', httpPort);
 var ctx = {};
+//with socket io
+var withSocketIO = process.env.WITH_SOCKETIO || 'false';
 
 var serverInstance = server.Server.bootstrap();
 serverInstance.init().then(done => {
@@ -20,6 +22,15 @@ serverInstance.init().then(done => {
     var app = serverInstance.app;
     app.set("port", httpPort);
     var httpServer = http.createServer(app);
+    if ('true' === withSocketIO) {
+      console.log('initializing socket io');
+      const io = require('socket.io')(server);
+      io.on('connection', (socket) => {
+        serverInstance.handleSocketIO(socket)
+          .then(done => { })
+          .catch(err => console.error('Failed to handle socker io', err))
+      });
+    }
     ctx.httpServer = httpServer;
 
     //listen on provided ports

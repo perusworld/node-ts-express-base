@@ -18,6 +18,7 @@ export class ControllerRoute {
   public hello(req: Request, res: Response, next: NextFunction) {
     logger.debug('Got %s', req.query);
     res.render("hello", {
+      title: "Hello",
       msg: "Hello From Controller",
       ts: new Date(),
       uuid: uuidv4(),

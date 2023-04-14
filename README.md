@@ -3,9 +3,9 @@
 ### Config using [dotenv](https://github.com/motdotla/dotenv) ###
 create a .env file and add your key=value pairs
 
-### NOTE: needs the following for now on heroku ###
+### NOTE: to enable [socket.io](https://socket.io/) add to env file ###
 ```bash
-heroku config:set NPM_CONFIG_PRODUCTION=false
+WITH_SOCKETIO=true
 ```
 
 ### Run ###

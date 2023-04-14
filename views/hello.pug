@@ -1,5 +1,9 @@
 extends layout
 
 block content
-  h1 Hello Page
-  p #{msg} @ #{ts} with #{uuid}
+  .card
+    .card-body
+      h5.card-title Hello Page
+      p.card-text
+        | #{msg} @ #{ts} with #{uuid}
+      a.btn.btn-primary(href='/') Go Home
