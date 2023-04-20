@@ -7,16 +7,11 @@ create a .env file and add your key=value pairs
 ```bash
 WITH_SOCKETIO=true
 ```
-
 ### Run ###
-- Bash
 ```bash
-npm run dev
-```
- - Powershell
-```powershell
 npm run dev
 ```
 
 #### URL
-[Local](http://localhost:3000/)
+* [Local](http://localhost:3000/)
+* [Socket.IO Script](http://localhost:3000/socket.io/socket.io.js)
