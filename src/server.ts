@@ -7,6 +7,9 @@ import { ControllerRoute } from "./controller";
 
 import { Socket } from "socket.io";
 import { IOHandler } from "./io";
+import { UtilService } from "./util";
+import { Database, InMemoryDatabase } from "./db";
+import { CMSRoute } from "./cms";
 
 /**
  * The server.
@@ -17,6 +20,9 @@ export class Server {
 
   public app: express.Application;
   public ioHandler: IOHandler;
+  private utl: UtilService;
+  private db: Database;
+  private cfg = {} as any;
 
   /**
    * Bootstrap the application.
@@ -40,7 +46,9 @@ export class Server {
     //create expressjs application
     this.app = express();
     this.ioHandler = new IOHandler();
-
+    this.utl = new UtilService(process.env.TIME_ZONE || 'America/Los_Angeles');
+    this.db = new InMemoryDatabase();
+    this.cfg = this.utl.loadJson(process.env.CONFIG || 'config');
   }
 
   public async init(): Promise<boolean> {
@@ -91,6 +99,8 @@ export class Server {
     let router = express.Router();
     let apiRoutes = new APIRoute();
     apiRoutes.buildRoutes(router);
+    let cmsRoutes = new CMSRoute(this.db);
+    cmsRoutes.buildRoutes(router);
     this.app.use('/api/v1', router);
   }
 
