@@ -1,6 +1,6 @@
-import * as express from "express";
+import express from "express";
 import * as path from "path";
-import * as cors from 'cors';
+import cors from 'cors';
 
 import { APIRoute } from "./api";
 import { ControllerRoute } from "./controller";
@@ -63,7 +63,7 @@ export class Server {
     this.api();
 
     ret = await this.tasks();
-    
+
     return ret;
   }
 
@@ -75,6 +75,13 @@ export class Server {
     return true;
   }
 
+  public async withServer(server: any): Promise<boolean> {
+    return true;
+  }
+
+  public async startedServer(server: any): Promise<boolean> {
+    return true;
+  }
 
   /**
    * Create Controller View routes
@@ -111,7 +118,9 @@ export class Server {
    * @method config
    */
   public config() {
-    this.app.use(cors());
+    this.app.use(cors({
+      exposedHeaders: ['Content-Disposition']
+    }));
     //add static paths
     this.app.use(express.static(path.join(__dirname, "../public")));
 
@@ -139,8 +148,8 @@ export class Server {
   /**
    * handleSocketIO
    */
-  public async handleSocketIO(socket: Socket) : Promise<boolean> {
+  public async handleSocketIO(socket: Socket): Promise<boolean> {
     return this.ioHandler.handle(socket);
   }
-
+  
 }

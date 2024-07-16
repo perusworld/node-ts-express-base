@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "ESNext",
     /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'. */
-    "module": "commonjs",
+    "module": "ESNext",
     /* Specify module code generation: 'commonjs', 'amd', 'system', 'umd' or 'es2015'. */
     // "lib": [],                             /* Specify library files to be included in the compilation:  */
     // "allowJs": true,                       /* Allow javascript files to be compiled. */
@@ -14,6 +14,7 @@
     /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
     "outDir": "./dist",
+    "rootDir": "./src", 
     /* Redirect output structure to the directory. */
     // "rootDir": "./",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     // "removeComments": true,                /* Do not emit comments to output. */
@@ -38,16 +39,21 @@
     // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
 
     /* Module Resolution Options */
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
     "baseUrl": "./",
+    "typeRoots": ["./node_modules/@types", "./src/types"]
     /* Base directory to resolve non-absolute module names. */
-    "paths": {
-      "*": [
-        "node_modules/*",
-        "src/types/*"
-      ]
-    } /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+    // "paths": {
+    //   "*": [
+    //     "node_modules/*",
+    //     "src/types/*"
+    //   ]
+    // },
+    /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
     // "typeRoots": [],                       /* List of folders to include type definitions from. */
     // "types": [],                           /* Type declaration files to be included in compilation. */
@@ -63,7 +69,6 @@
     // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
     // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*", "node_modules/@types/**/*"],
+  "exclude": ["node_modules"]
 }

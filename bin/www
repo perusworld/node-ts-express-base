@@ -1,67 +1,82 @@
 #!/usr/bin/env node
 "use strict";
 
-require('dotenv').config()
+require('dotenv').config();
 
-//module dependencies
-var server = require("../dist/server");
-var debug = require("debug")("express:server");
-var http = require("http");
-const { Server } = require("socket.io");
+// Module dependencies
+const { Server } = require("../dist/bundle");
+const debug = require("debug")("express:server");
+const http = require("http");
+const { Server: SocketIOServer } = require("socket.io");
 
-//create http server
-var httpPort = normalizePort(process.env.PORT || 3000);
-console.log('Using port', httpPort);
-var ctx = {};
-//with socket io
-var withSocketIO = process.env.WITH_SOCKETIO || 'false';
+// Create HTTP server
+const httpPort = normalizePort(process.env.PORT || 3000);
+console.log('Using port', httpPort, Server);
+const ctx = {};
 
-var serverInstance = server.Server.bootstrap();
+// With socket.io
+const withSocketIO = process.env.WITH_SOCKETIO || 'false';
+
+const serverInstance = Server.bootstrap();
 serverInstance.init().then(done => {
   if (done) {
     console.log('Server initialised.');
-    var app = serverInstance.app;
+    const app = serverInstance.app;
     app.set("port", httpPort);
-    var httpServer = http.createServer(app);
+
+    const httpServer = http.createServer(app);
     if ('true' === withSocketIO) {
       console.log('initializing socket io');
-      const io = new Server(httpServer);
+      const io = new SocketIOServer(httpServer);
       io.on('connection', (socket) => {
         serverInstance.handleSocketIO(socket)
           .then(done => { })
-          .catch(err => console.error('Failed to handle socker io', err))
+          .catch(err => console.error('Failed to handle socket io', err));
       });
     }
     ctx.httpServer = httpServer;
 
-    //listen on provided ports
-    httpServer.listen(httpPort);
+    serverInstance.withServer(httpServer).then(done => {
+      if (done) {
+        // Listen on provided ports
+        httpServer.listen(httpPort);
+        // Add error handler
+        httpServer.on("error", onError);
+        // Start listening on port
+        httpServer.on("listening", onListening);
 
-    //add error handler
-    httpServer.on("error", onError);
+        serverInstance.startedServer(httpServer).then(done => {
+          if (done) {
+            console.log('Server started.');
+          } else {
+            console.log('Server started with some post startup failures.');
+          }
+        });
+      } else {
+        console.error('withServer initialization failed');
+      }
+    });
 
-    //start listening on port
-    httpServer.on("listening", onListening);
   } else {
     console.error('Server initialization failed');
   }
 }).catch(err => {
   console.error('Failed to start server', err);
-})
+});
 
 /**
  * Normalize a port into a number, string, or false.
  */
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  const port = parseInt(val, 10);
 
   if (isNaN(port)) {
-    // named pipe
+    // Named pipe
     return val;
   }
 
   if (port >= 0) {
-    // port number
+    // Port number
     return port;
   }
 
@@ -76,11 +91,11 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof httpPort === "string"
+  const bind = typeof httpPort === "string"
     ? "Pipe " + httpPort
     : "Port " + httpPort;
 
-  // handle specific listen errors with friendly messages
+  // Handle specific listen errors with friendly messages
   switch (error.code) {
     case "EACCES":
       console.error(bind + " requires elevated privileges");
@@ -97,7 +112,7 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 function onListening() {
-  var addr = ctx.httpServer.address();
-  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  const addr = ctx.httpServer.address();
+  const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   debug("Listening on " + bind);
 }
