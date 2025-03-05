@@ -57,6 +57,11 @@ export class CMSRoute {
     res.json(await this.db.findAllByExample(req.params["name"], req.body));
   }
 
+  public async listAll(req: Request, res: Response, next: NextFunction) {
+    logger.debug('listAll %s', req.params["name"]);
+    res.json(await this.db.getAll(req.params["name"]));
+  }
+
   /**
    * buildRoutes
    */
@@ -68,6 +73,7 @@ export class CMSRoute {
       next();
     })
 
+    router.get("/cms/:name", this.listAll.bind(this));
     router.get("/cms/:name/:id", this.getById.bind(this));
     router.get("/cms/reset/:name", this.delete.bind(this));
     router.get("/cms/reset-all", this.deleteAll.bind(this));
