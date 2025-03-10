@@ -1,3 +1,7 @@
 {
-    
+  "database": {
+    "type": "InMemory",
+    "path": "database/db.json",
+    "loadOnStartup": true
+  }   
 }

@@ -62,6 +62,16 @@ export class CMSRoute {
     res.json(await this.db.getAll(req.params["name"]));
   }
 
+  public async saveDB(req: Request, res: Response, next: NextFunction) {
+    await this.db.saveDB();
+    res.json({ success: true });
+  }
+
+  public async loadDB(req: Request, res: Response, next: NextFunction) {  
+    await this.db.loadDB();
+    res.json({ success: true });
+  }
+
   /**
    * buildRoutes
    */
@@ -83,6 +93,8 @@ export class CMSRoute {
     router.post("/cms/save/:name", this.save.bind(this));
     router.post("/cms/find/:name", this.findFirstByExample.bind(this));
     router.post("/cms/find-all/:name", this.findAllByExample.bind(this));
+    router.post("/cms/save-db", this.saveDB.bind(this));
+    router.post("/cms/load-db", this.loadDB.bind(this));
   }
 
 

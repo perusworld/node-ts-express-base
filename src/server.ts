@@ -47,8 +47,8 @@ export class Server {
     this.app = express();
     this.ioHandler = new IOHandler();
     this.utl = new UtilService(process.env.TIME_ZONE || 'America/Los_Angeles');
-    this.db = new InMemoryDatabase();
     this.cfg = this.utl.loadJson(process.env.CONFIG || 'config');
+    this.db = new InMemoryDatabase(this.cfg.database);
   }
 
   public async init(): Promise<boolean> {

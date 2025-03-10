@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs/promises';
 
 export interface Model {
   id?: string;
@@ -7,6 +8,7 @@ export interface Model {
 
 export interface Database {
   uuid(): string;
+  init(): Promise<boolean>;
   createOrUpdate(tableName: string, item: any): any;
   findById(tableName: string, id?: string): any | undefined;
   deleteById(tableName: string, id?: string): any | undefined;
@@ -15,13 +17,31 @@ export interface Database {
   deleteAll(): boolean;
   findFirstByExample(tableName: string, model: any): any | undefined;
   findAllByExample(tableName: string, model: any): any[];
+  saveDB(): Promise<void>;
+  loadDB(): Promise<void>;
+}
+
+export interface DatabaseConfig {
+  type: 'InMemory';
+  path: string;
+  loadOnStartup: boolean;
 }
 
 export class InMemoryDatabase implements Database {
   private tables: Map<string, Map<string, Model>>;
-
-  constructor() {
+  private cfg: DatabaseConfig;
+  constructor(cfg: DatabaseConfig) {
     this.tables = new Map();
+    this.cfg = cfg;
+  }
+
+  async init(): Promise<boolean> {
+    let ret = false;
+    if (this.cfg.loadOnStartup) {
+      await this.loadDB();
+      ret = true;
+    }
+    return ret;
   }
 
   uuid() {
@@ -153,4 +173,37 @@ export class InMemoryDatabase implements Database {
     return true;
   }
 
+  async saveDB(): Promise<void> {
+    try {
+      const data = Array.from(this.tables).map(([tableName, table]) => [
+        tableName,
+        Array.from(table.values())
+      ]);
+      await fs.writeFile(this.cfg.path, JSON.stringify(data, null, 2));
+    } catch (error) {
+      throw new Error(`Failed to save database: ${(error as Error).message}`);
+    }
+  }
+
+  async loadDB(): Promise<void> {
+    try {
+      const content = await fs.readFile(this.cfg.path, 'utf-8');
+      const data = JSON.parse(content) as [string, Model[]][];
+      
+      this.tables.clear();
+      for (const [tableName, items] of data) {
+        this.tables.set(tableName, new Map(
+          items
+            .filter(item => item.id)
+            .map(item => [item.id!, item])
+        ));
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        this.tables.clear();
+      } else {
+        throw new Error(`Failed to load database: ${(error as Error).message}`);
+      }
+    }
+  }
 }
