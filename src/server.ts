@@ -72,7 +72,9 @@ export class Server {
   }
 
   public async tasks(): Promise<boolean> {
-    return true;
+    let ret = false;
+    ret = await this.db.init();
+    return ret;
   }
 
   public async withServer(server: any): Promise<boolean> {

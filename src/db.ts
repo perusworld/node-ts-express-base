@@ -30,9 +30,9 @@ export interface DatabaseConfig {
 export class InMemoryDatabase implements Database {
   private tables: Map<string, Map<string, Model>>;
   private cfg: DatabaseConfig;
-  constructor(cfg: DatabaseConfig) {
+  constructor(cfg?: DatabaseConfig) {
     this.tables = new Map();
-    this.cfg = cfg;
+    this.cfg = cfg || { type: 'InMemory', path: '', loadOnStartup: false } as DatabaseConfig;
   }
 
   async init(): Promise<boolean> {
