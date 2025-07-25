@@ -7,7 +7,7 @@
     "build": "webpack",
     "start": "node ./bin/www",
     "start:build": "webpack --watch",
-    "start:watch": "nodemon ./bin/www",
+    "start:watch": "nodemon",
     "dev": "concurrently npm:start:*",
     "postinstall": "webpack"
   },
