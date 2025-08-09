@@ -11,6 +11,8 @@ import { UtilService } from './util';
 import { Database, InMemoryDatabase } from './db';
 import { CMSRoute } from './cms';
 import { IPRestrictionMiddleware } from './middleware/ip.restriction';
+import { SessionDatabaseMiddleware } from './middleware/session-database';
+import { DatabaseFactory } from './db-factory';
 
 /**
  * The server.
@@ -22,6 +24,8 @@ export class Server {
   public ioHandler: IOHandler;
   private utl: UtilService;
   private db: Database;
+  private dbFactory?: DatabaseFactory;
+  private sessionMiddleware?: SessionDatabaseMiddleware;
   private cfg = {} as any;
 
   /**
@@ -49,6 +53,33 @@ export class Server {
     this.utl = new UtilService(process.env.TIME_ZONE || 'America/Los_Angeles');
     this.cfg = this.utl.loadJson(process.env.CONFIG || 'config');
     this.db = new InMemoryDatabase(this.cfg.database);
+
+    // Initialize session database if enabled
+    if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
+      this.initializeSessionDatabase();
+    }
+  }
+
+  /**
+   * Initialize session database factory and middleware
+   */
+  private initializeSessionDatabase() {
+    this.dbFactory = new DatabaseFactory({
+      ...this.cfg.database,
+      sessionPrefix: process.env.SESSION_PREFIX || 'session_',
+      maxSessions: parseInt(process.env.MAX_SESSIONS || '100'),
+      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || '1800000') // 30 minutes
+    });
+
+    this.sessionMiddleware = new SessionDatabaseMiddleware(this.dbFactory, {
+      headerName: process.env.SESSION_HEADER || 'X-App-Session',
+      queryParamName: process.env.SESSION_QUERY_PARAM || 'session',
+      cookieName: process.env.SESSION_COOKIE || 'app_session',
+      defaultSession: process.env.DEFAULT_SESSION || 'default',
+      enableSessionIsolation: true
+    });
+
+    console.log('Session database isolation enabled');
   }
 
   public async init(): Promise<boolean> {
@@ -106,7 +137,7 @@ export class Server {
    */
   public api() {
     let router = express.Router();
-    let apiRoutes = new APIRoute();
+    let apiRoutes = new APIRoute(this);
     apiRoutes.buildRoutes(router);
     let cmsRoutes = new CMSRoute(this.db);
     cmsRoutes.buildRoutes(router);
@@ -123,6 +154,11 @@ export class Server {
     // Add IP restriction middleware early in the chain
     const ipRestriction = new IPRestrictionMiddleware();
     this.app.use(ipRestriction.middleware());
+
+    // Add session database middleware if enabled
+    if (this.sessionMiddleware) {
+      this.app.use(this.sessionMiddleware.middleware());
+    }
 
     this.app.use(
       cors({
@@ -158,5 +194,19 @@ export class Server {
    */
   public async handleSocketIO(socket: Socket): Promise<boolean> {
     return this.ioHandler.handle(socket);
+  }
+
+  /**
+   * Get session statistics (if session isolation is enabled)
+   */
+  public getSessionStats() {
+    return this.sessionMiddleware?.getStats();
+  }
+
+  /**
+   * Cleanup expired sessions (if session isolation is enabled)
+   */
+  public cleanupSessions(): number {
+    return this.sessionMiddleware?.cleanupSessions() || 0;
   }
 }

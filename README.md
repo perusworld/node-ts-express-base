@@ -12,6 +12,7 @@ A robust Node.js TypeScript Express base project with Socket.IO support, IP rest
 - **Environment Variables** - Comprehensive configuration via environment variables
 - **Testing** - Jest testing framework setup
 - **Webpack** - Asset bundling and development tools
+- **Session Database Isolation** - Optional isolated database instances per session (see [SESSION_ISOLATION.md](SESSION_ISOLATION.md))
 
 ## Installation
 
@@ -49,6 +50,17 @@ Copy `env.example` to `.env` and configure the following variables:
 - `ALLOWED_IPS` - Comma-separated list of allowed IP addresses
 - `ALLOW_LOCAL_ADDRESSES` - Allow local address access (default: true)
 
+#### Session Database Isolation (Optional)
+
+- `ENABLE_SESSION_ISOLATION` - Enable session-based database isolation (default: false)
+- `SESSION_PREFIX` - Prefix for session database files (default: session_)
+- `MAX_SESSIONS` - Maximum number of concurrent sessions (default: 100)
+- `SESSION_TIMEOUT` - Session timeout in milliseconds (default: 1800000)
+- `SESSION_HEADER` - HTTP header name for session key (default: X-App-Session)
+- `SESSION_QUERY_PARAM` - Query parameter name for session key (default: session)
+- `SESSION_COOKIE` - Cookie name for session key (default: app_session)
+- `DEFAULT_SESSION` - Default session key when none provided (default: default)
+
 ### Example .env file
 
 ```bash
@@ -69,6 +81,16 @@ BE_LOG_FORMAT=simple
 IP_RESTRICTION_ENABLED=false
 ALLOWED_IPS=192.168.1.100,10.0.0.50
 ALLOW_LOCAL_ADDRESSES=true
+
+# Session Database Isolation (Optional)
+ENABLE_SESSION_ISOLATION=false
+SESSION_PREFIX=session_
+MAX_SESSIONS=100
+SESSION_TIMEOUT=1800000
+SESSION_HEADER=X-App-Session
+SESSION_QUERY_PARAM=session
+SESSION_COOKIE=app_session
+DEFAULT_SESSION=default
 ```
 
 ## Running the Application
