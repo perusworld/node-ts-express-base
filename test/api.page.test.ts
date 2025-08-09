@@ -1,6 +1,6 @@
-export { };
-let request = require("supertest");
-let server = require("../src/server");
+export {};
+let request = require('supertest');
+let server = require('../src/server');
 let serverInstance = server.Server.bootstrap();
 let app = serverInstance.app;
 
@@ -12,10 +12,10 @@ afterAll(() => {
   return serverInstance.cleanup();
 });
 
-describe("Test the api hello", () => {
-  test("It should call api hello", done => {
+describe('Test the api hello', () => {
+  test('It should call api hello', done => {
     request(app)
-      .post("/api/v1/hello")
+      .post('/api/v1/hello')
       .send({ msg: 'hi' })
       .set('Accept', 'application/json')
       .expect(200)
@@ -25,14 +25,14 @@ describe("Test the api hello", () => {
         expect(res.body.youSent).toMatchObject({ msg: 'hi' });
         done();
       })
-      .catch((err: any) => done(err))
+      .catch((err: any) => done(err));
   });
 });
 
-describe("Test the api undefined blah", () => {
-  test("It should respond with 404", done => {
+describe('Test the api undefined blah', () => {
+  test('It should respond with 404', done => {
     request(app)
-      .post("/api/v1/blah")
+      .post('/api/v1/blah')
       .send({ msg: 'hi' })
       .set('Accept', 'application/json')
       .expect(404)
@@ -40,6 +40,6 @@ describe("Test the api undefined blah", () => {
         expect(res.text).toContain('Error');
         done();
       })
-      .catch((err: any) => done(err))
+      .catch((err: any) => done(err));
   });
 });

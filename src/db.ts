@@ -32,7 +32,7 @@ export class InMemoryDatabase implements Database {
   private cfg: DatabaseConfig;
   constructor(cfg?: DatabaseConfig) {
     this.tables = new Map();
-    this.cfg = cfg || { type: 'InMemory', path: '', loadOnStartup: false } as DatabaseConfig;
+    this.cfg = cfg || ({ type: 'InMemory', path: '', loadOnStartup: false } as DatabaseConfig);
   }
 
   async init(): Promise<boolean> {
@@ -66,7 +66,7 @@ export class InMemoryDatabase implements Database {
 
   findById<T extends Model>(tableName: string, id?: string): T | undefined {
     const table = this.tables.get(tableName);
-    return table && id ? table.get(id) as T : undefined;
+    return table && id ? (table.get(id) as T) : undefined;
   }
 
   deleteById<T extends Model>(tableName: string, id?: string): T | undefined {
@@ -96,7 +96,7 @@ export class InMemoryDatabase implements Database {
 
   getAll(tableName: string): any[] {
     const table = this.tables.get(tableName);
-    return table ? Array.from(table.values()) : []
+    return table ? Array.from(table.values()) : [];
   }
 
   findFirstByExample<T extends Model>(tableName: string, model: Partial<T>): T | undefined {
@@ -104,7 +104,6 @@ export class InMemoryDatabase implements Database {
     if (!table) return undefined;
 
     console.log('matching', model);
-
 
     for (const item of table.values()) {
       if (this.matches(item as T, model)) {
@@ -155,8 +154,7 @@ export class InMemoryDatabase implements Database {
         const itemValue = item[key as keyof T];
 
         if (Array.isArray(modelValue) && Array.isArray(itemValue)) {
-          if (!modelValue.every(modelEl =>
-            itemValue.some(itemEl => this.deepEquals(modelEl, itemEl)))) {
+          if (!modelValue.every(modelEl => itemValue.some(itemEl => this.deepEquals(modelEl, itemEl)))) {
             return false;
           }
         } else if (this.isObject(modelValue)) {
@@ -175,10 +173,7 @@ export class InMemoryDatabase implements Database {
 
   async saveDB(): Promise<void> {
     try {
-      const data = Array.from(this.tables).map(([tableName, table]) => [
-        tableName,
-        Array.from(table.values())
-      ]);
+      const data = Array.from(this.tables).map(([tableName, table]) => [tableName, Array.from(table.values())]);
       await fs.writeFile(this.cfg.path, JSON.stringify(data, null, 2));
     } catch (error) {
       throw new Error(`Failed to save database: ${(error as Error).message}`);
@@ -189,14 +184,10 @@ export class InMemoryDatabase implements Database {
     try {
       const content = await fs.readFile(this.cfg.path, 'utf-8');
       const data = JSON.parse(content) as [string, Model[]][];
-      
+
       this.tables.clear();
       for (const [tableName, items] of data) {
-        this.tables.set(tableName, new Map(
-          items
-            .filter(item => item.id)
-            .map(item => [item.id!, item])
-        ));
+        this.tables.set(tableName, new Map(items.filter(item => item.id).map(item => [item.id!, item])));
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {

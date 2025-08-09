@@ -1,15 +1,16 @@
-import express from "express";
-import * as path from "path";
+import express from 'express';
+import * as path from 'path';
 import cors from 'cors';
 
-import { APIRoute } from "./api";
-import { ControllerRoute } from "./controller";
+import { APIRoute } from './api';
+import { ControllerRoute } from './controller';
 
-import { Socket } from "socket.io";
-import { IOHandler } from "./io";
-import { UtilService } from "./util";
-import { Database, InMemoryDatabase } from "./db";
-import { CMSRoute } from "./cms";
+import { Socket } from 'socket.io';
+import { IOHandler } from './io';
+import { UtilService } from './util';
+import { Database, InMemoryDatabase } from './db';
+import { CMSRoute } from './cms';
+import { IPRestrictionMiddleware } from './middleware/ip.restriction';
 
 /**
  * The server.
@@ -17,7 +18,6 @@ import { CMSRoute } from "./cms";
  * @class Server
  */
 export class Server {
-
   public app: express.Application;
   public ioHandler: IOHandler;
   private utl: UtilService;
@@ -120,31 +120,37 @@ export class Server {
    * @method config
    */
   public config() {
-    this.app.use(cors({
-      exposedHeaders: ['Content-Disposition']
-    }));
+    // Add IP restriction middleware early in the chain
+    const ipRestriction = new IPRestrictionMiddleware();
+    this.app.use(ipRestriction.middleware());
+
+    this.app.use(
+      cors({
+        exposedHeaders: ['Content-Disposition'],
+      })
+    );
     //add static paths
-    this.app.use(express.static(path.join(__dirname, "../public")));
+    this.app.use(express.static(path.join(__dirname, '../public')));
 
     //configure pug
-    this.app.set("views", path.join(__dirname, "../views"));
-    this.app.set("view engine", "pug");
+    this.app.set('views', path.join(__dirname, '../views'));
+    this.app.set('view engine', 'pug');
 
     //mount json form parser
     this.app.use(express.json());
 
     //mount query string parser
-    this.app.use(express.urlencoded({
-      extended: true
-    }));
-
+    this.app.use(
+      express.urlencoded({
+        extended: true,
+      })
+    );
 
     // catch 404 and forward to error handler
     this.app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
       err.status = 404;
       next(err);
     });
-
   }
 
   /**
@@ -153,5 +159,4 @@ export class Server {
   public async handleSocketIO(socket: Socket): Promise<boolean> {
     return this.ioHandler.handle(socket);
   }
-  
 }

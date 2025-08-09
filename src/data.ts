@@ -70,4 +70,3 @@ export class InMemoryCRUD<T extends Model> {
     return 0 < result.length ? result[0] : undefined;
   }
 }
-
