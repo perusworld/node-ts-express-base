@@ -11,6 +11,8 @@ export interface SessionDatabaseOptions {
   cookieName?: string;
   defaultSession?: string;
   enableSessionIsolation?: boolean;
+  autoMapSessionByIP?: boolean;
+  ipSessionPrefix?: string;
 }
 
 declare global {
@@ -25,6 +27,7 @@ declare global {
 export class SessionDatabaseMiddleware {
   private factory: DatabaseFactory;
   private options: SessionDatabaseOptions;
+  private ipSessionMap: Map<string, string> = new Map();
 
   constructor(factory: DatabaseFactory, options?: SessionDatabaseOptions) {
     this.factory = factory;
@@ -34,8 +37,53 @@ export class SessionDatabaseMiddleware {
       cookieName: 'app_session',
       defaultSession: 'default',
       enableSessionIsolation: true,
+      autoMapSessionByIP: true,
+      ipSessionPrefix: 'ip_',
       ...options,
     };
+  }
+
+  /**
+   * Get client IP address using the same logic as IP restriction middleware
+   */
+  private getClientIP(req: Request): string {
+    // Check for forwarded headers (when behind proxy/load balancer)
+    const forwardedFor = req.headers['x-forwarded-for'];
+    if (forwardedFor) {
+      const ips = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
+      return ips.split(',')[0].trim();
+    }
+
+    // Check for real IP header
+    const realIP = req.headers['x-real-ip'];
+    if (realIP) {
+      return Array.isArray(realIP) ? realIP[0] : realIP;
+    }
+
+    // Fallback to connection remote address
+    return req.connection.remoteAddress || req.socket.remoteAddress || (req as any).ip || 'unknown';
+  }
+
+  /**
+   * Generate session key from IP address
+   */
+  private generateIPSessionKey(ip: string): string {
+    // Sanitize IP address for use in session key
+    // Replace dots and colons with underscores for safe session key
+    const sanitizedIP = ip.replace(/[.:]/g, '_');
+    return `${this.options.ipSessionPrefix}${sanitizedIP}`;
+  }
+
+  /**
+   * Get or create session key for IP address
+   */
+  private getIPSessionKey(ip: string): string {
+    if (!this.ipSessionMap.has(ip)) {
+      const sessionKey = this.generateIPSessionKey(ip);
+      this.ipSessionMap.set(ip, sessionKey);
+      logger.debug(`Auto-mapped IP ${ip} to session key: ${sessionKey}`);
+    }
+    return this.ipSessionMap.get(ip)!;
   }
 
   /**
@@ -60,6 +108,12 @@ export class SessionDatabaseMiddleware {
     // Try cookie
     if (this.options.cookieName && req.cookies && req.cookies[this.options.cookieName]) {
       return req.cookies[this.options.cookieName];
+    }
+
+    // Auto-map by IP if enabled and no session key found
+    if (this.options.autoMapSessionByIP) {
+      const clientIP = this.getClientIP(req);
+      return this.getIPSessionKey(clientIP);
     }
 
     // Return default session
@@ -93,7 +147,15 @@ export class SessionDatabaseMiddleware {
    * Get session statistics
    */
   public getStats() {
-    return this.factory.getStats();
+    const stats = this.factory.getStats();
+    if (this.options.autoMapSessionByIP) {
+      return {
+        ...stats,
+        ipSessionMappings: this.ipSessionMap.size,
+        autoMapEnabled: true,
+      };
+    }
+    return stats;
   }
 
   /**
@@ -108,5 +170,35 @@ export class SessionDatabaseMiddleware {
    */
   public removeSession(sessionKey: string): boolean {
     return this.factory.removeSession(sessionKey);
+  }
+
+  /**
+   * Get IP-session mapping statistics
+   */
+  public getIPSessionStats() {
+    if (!this.options.autoMapSessionByIP) {
+      return null;
+    }
+
+    // Convert Map to plain object
+    const mappings: { [key: string]: string } = {};
+    for (const [ip, sessionKey] of this.ipSessionMap.entries()) {
+      mappings[ip] = sessionKey;
+    }
+
+    return {
+      totalMappings: this.ipSessionMap.size,
+      mappings: mappings,
+    };
+  }
+
+  /**
+   * Clear IP-session mappings (useful for testing or manual cleanup)
+   */
+  public clearIPSessionMappings(): number {
+    const count = this.ipSessionMap.size;
+    this.ipSessionMap.clear();
+    logger.debug(`Cleared ${count} IP-session mappings`);
+    return count;
   }
 }

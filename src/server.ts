@@ -76,10 +76,20 @@ export class Server {
       queryParamName: process.env.SESSION_QUERY_PARAM || 'session',
       cookieName: process.env.SESSION_COOKIE || 'app_session',
       defaultSession: process.env.DEFAULT_SESSION || 'default',
-      enableSessionIsolation: true,
+      enableSessionIsolation: process.env.ENABLE_SESSION_ISOLATION !== 'false',
+      autoMapSessionByIP: process.env.AUTO_MAP_SESSION_BY_IP !== 'false',
+      ipSessionPrefix: process.env.IP_SESSION_PREFIX || 'ip_',
     });
 
-    console.log('Session database isolation enabled');
+    const sessionIsolationEnabled = process.env.ENABLE_SESSION_ISOLATION !== 'false';
+    const autoMapEnabled = process.env.AUTO_MAP_SESSION_BY_IP !== 'false';
+
+    if (sessionIsolationEnabled) {
+      console.log('Session database isolation enabled');
+    }
+    if (autoMapEnabled) {
+      console.log('Auto-mapping session keys by IP enabled');
+    }
   }
 
   public async init(): Promise<boolean> {

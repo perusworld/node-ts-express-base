@@ -17,7 +17,7 @@ export class IPRestrictionMiddleware {
   }
 
   private loadConfig(): IPRestrictionConfig {
-    const enabled = process.env.IP_RESTRICTION_ENABLED === 'true';
+    const enabled = process.env.IP_RESTRICTION_ENABLED !== 'false';
     const allowedIPsString = process.env.ALLOWED_IPS || '';
     const allowLocalAddresses = process.env.ALLOW_LOCAL_ADDRESSES !== 'false'; // Default to true
 
@@ -61,6 +61,8 @@ export class IPRestrictionMiddleware {
     this.localAddresses.add('127.0.0.1');
     this.localAddresses.add('localhost');
     this.localAddresses.add('::1');
+    // Add IPv6-mapped IPv4 addresses (common in Node.js)
+    this.localAddresses.add('::ffff:127.0.0.1');
   }
 
   private isLocalAddress(ip: string): boolean {

@@ -40,6 +40,13 @@ export class APIRoute {
     if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
       router.get('/sessions/stats', this.getSessionStats.bind(this));
       router.get('/sessions/cleanup', this.cleanupSessions.bind(this));
+
+      // IP-session mapping endpoints (only available when auto-mapping is enabled)
+      if (process.env.AUTO_MAP_SESSION_BY_IP === 'true') {
+        router.get('/sessions/ip-mappings', this.getIPSessionMappings.bind(this));
+        router.delete('/sessions/ip-mappings', this.clearIPSessionMappings.bind(this));
+      }
+
       router.delete('/sessions/:sessionKey', this.removeSession.bind(this));
     }
   }
@@ -127,6 +134,39 @@ export class APIRoute {
     } else {
       res.json({
         message: `Remove session endpoint - server instance not available for session: ${sessionKey}`,
+        sessionKey: req.sessionKey || 'default',
+      });
+    }
+  }
+
+  /**
+   * Get IP-session mappings
+   */
+  public getIPSessionMappings(req: Request, res: Response, next: NextFunction) {
+    if (this.serverInstance) {
+      const mappings = this.serverInstance.sessionMiddleware?.getIPSessionStats();
+      res.json(mappings);
+    } else {
+      res.json({
+        message: 'IP-session mappings endpoint - server instance not available',
+        sessionKey: req.sessionKey || 'default',
+      });
+    }
+  }
+
+  /**
+   * Clear IP-session mappings
+   */
+  public clearIPSessionMappings(req: Request, res: Response, next: NextFunction) {
+    if (this.serverInstance) {
+      const clearedCount = this.serverInstance.sessionMiddleware?.clearIPSessionMappings();
+      res.json({
+        clearedMappings: clearedCount,
+        success: true,
+      });
+    } else {
+      res.json({
+        message: 'Clear IP-session mappings endpoint - server instance not available',
         sessionKey: req.sessionKey || 'default',
       });
     }

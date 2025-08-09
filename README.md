@@ -13,6 +13,7 @@ A robust Node.js TypeScript Express base project with Socket.IO support, IP rest
 - **Testing** - Jest testing framework setup
 - **Webpack** - Asset bundling and development tools
 - **Session Database Isolation** - Optional isolated database instances per session (see [SESSION_ISOLATION.md](SESSION_ISOLATION.md))
+- **Auto-mapping Session Keys by IP** - Automatic session key generation based on client IP addresses
 
 ## Installation
 
@@ -46,13 +47,13 @@ Copy `env.example` to `.env` and configure the following variables:
 
 #### IP Restriction Configuration
 
-- `IP_RESTRICTION_ENABLED` - Enable IP restriction (default: false)
+- `IP_RESTRICTION_ENABLED` - Enable IP restriction (default: true)
 - `ALLOWED_IPS` - Comma-separated list of allowed IP addresses
 - `ALLOW_LOCAL_ADDRESSES` - Allow local address access (default: true)
 
 #### Session Database Isolation (Optional)
 
-- `ENABLE_SESSION_ISOLATION` - Enable session-based database isolation (default: false)
+- `ENABLE_SESSION_ISOLATION` - Enable session-based database isolation (default: true)
 - `SESSION_PREFIX` - Prefix for session database files (default: session\_)
 - `MAX_SESSIONS` - Maximum number of concurrent sessions (default: 100)
 - `SESSION_TIMEOUT` - Session timeout in milliseconds (default: 1800000)
@@ -60,6 +61,11 @@ Copy `env.example` to `.env` and configure the following variables:
 - `SESSION_QUERY_PARAM` - Query parameter name for session key (default: session)
 - `SESSION_COOKIE` - Cookie name for session key (default: app_session)
 - `DEFAULT_SESSION` - Default session key when none provided (default: default)
+
+#### Auto-mapping Session Keys by IP (Optional)
+
+- `AUTO_MAP_SESSION_BY_IP` - Enable automatic session key generation based on client IP (default: true)
+- `IP_SESSION_PREFIX` - Prefix for auto-generated IP-based session keys (default: ip\_)
 
 ### Example .env file
 
@@ -78,12 +84,12 @@ BE_APP_NAME=express-base
 BE_LOG_FORMAT=simple
 
 # IP Restriction Configuration
-IP_RESTRICTION_ENABLED=false
+IP_RESTRICTION_ENABLED=true
 ALLOWED_IPS=192.168.1.100,10.0.0.50
 ALLOW_LOCAL_ADDRESSES=true
 
 # Session Database Isolation (Optional)
-ENABLE_SESSION_ISOLATION=false
+ENABLE_SESSION_ISOLATION=true
 SESSION_PREFIX=session_
 MAX_SESSIONS=100
 SESSION_TIMEOUT=1800000
@@ -91,6 +97,10 @@ SESSION_HEADER=X-App-Session
 SESSION_QUERY_PARAM=session
 SESSION_COOKIE=app_session
 DEFAULT_SESSION=default
+
+# Auto-mapping Session Keys by IP (Optional)
+AUTO_MAP_SESSION_BY_IP=true
+IP_SESSION_PREFIX=ip_
 ```
 
 ## Running the Application
@@ -127,6 +137,29 @@ npm test
 - `npm test` - Run tests
 - `npm run start:watch` - Start with nodemon for development
 - `npm run start:build` - Start Webpack in watch mode
+
+## Auto-mapping Session Keys by IP
+
+When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are set, the application will automatically generate session keys based on client IP addresses when no explicit session key is provided in the request.
+
+### How it works:
+
+1. **Request without session key**: When a request comes in without a session key in header, query parameter, or cookie
+2. **IP detection**: The client's IP address is extracted using the same logic as IP restriction middleware
+3. **Session key generation**: A session key is generated in the format `ip_<sanitized_ip_address>`
+4. **Session mapping**: The IP address is mapped to this session key for future requests
+5. **Data isolation**: Each IP gets its own isolated database instance
+
+### Example:
+
+- Request from `192.168.1.100` without session key → Session key: `ip_192_168_1_100`
+- Request from `2001:db8::1` without session key → Session key: `ip_2001_db8__1`
+- Request with explicit session key → Uses the explicit session key (auto-mapping is bypassed)
+
+### API Endpoints:
+
+- `GET /api/v1/sessions/ip-mappings` - Get IP-session mapping statistics
+- `DELETE /api/v1/sessions/ip-mappings` - Clear all IP-session mappings
 
 ## Project Structure
 
