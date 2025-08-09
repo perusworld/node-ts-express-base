@@ -68,7 +68,7 @@ export class Server {
       ...this.cfg.database,
       sessionPrefix: process.env.SESSION_PREFIX || 'session_',
       maxSessions: parseInt(process.env.MAX_SESSIONS || '100'),
-      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || '1800000') // 30 minutes
+      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || '1800000'), // 30 minutes
     });
 
     this.sessionMiddleware = new SessionDatabaseMiddleware(this.dbFactory, {
@@ -76,7 +76,7 @@ export class Server {
       queryParamName: process.env.SESSION_QUERY_PARAM || 'session',
       cookieName: process.env.SESSION_COOKIE || 'app_session',
       defaultSession: process.env.DEFAULT_SESSION || 'default',
-      enableSessionIsolation: true
+      enableSessionIsolation: true,
     });
 
     console.log('Session database isolation enabled');

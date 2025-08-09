@@ -35,7 +35,7 @@ export class APIRoute {
     router.get('/hello', this.helloGet.bind(this));
     router.post('/hello', this.helloPost.bind(this));
     router.get('/health', this.health.bind(this));
-    
+
     // Session management endpoints (only available when session isolation is enabled)
     if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
       router.get('/sessions/stats', this.getSessionStats.bind(this));
@@ -51,7 +51,7 @@ export class APIRoute {
     res.json({
       message: 'Hello World!',
       timestamp: new Date().toISOString(),
-      sessionKey: req.sessionKey || 'default'
+      sessionKey: req.sessionKey || 'default',
     });
   }
 
@@ -74,7 +74,7 @@ export class APIRoute {
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      sessionKey: req.sessionKey || 'default'
+      sessionKey: req.sessionKey || 'default',
     });
   }
 
@@ -88,7 +88,7 @@ export class APIRoute {
     } else {
       res.json({
         message: 'Session statistics endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default'
+        sessionKey: req.sessionKey || 'default',
       });
     }
   }
@@ -101,12 +101,12 @@ export class APIRoute {
       const cleanedCount = this.serverInstance.cleanupSessions();
       res.json({
         cleanedSessions: cleanedCount,
-        success: true
+        success: true,
       });
     } else {
       res.json({
         message: 'Session cleanup endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default'
+        sessionKey: req.sessionKey || 'default',
       });
     }
   }
@@ -116,18 +116,18 @@ export class APIRoute {
    */
   public removeSession(req: Request, res: Response, next: NextFunction) {
     const sessionKey = req.params.sessionKey;
-    
+
     if (this.serverInstance) {
       const removed = this.serverInstance.sessionMiddleware?.removeSession(sessionKey);
       res.json({
         sessionKey: sessionKey,
         removed: removed,
-        success: true
+        success: true,
       });
     } else {
       res.json({
         message: `Remove session endpoint - server instance not available for session: ${sessionKey}`,
-        sessionKey: req.sessionKey || 'default'
+        sessionKey: req.sessionKey || 'default',
       });
     }
   }

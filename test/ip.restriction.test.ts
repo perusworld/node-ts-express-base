@@ -1,7 +1,6 @@
-export {};
-let request = require('supertest');
-let express = require('express');
-let { IPRestrictionMiddleware } = require('../src/middleware/ip.restriction');
+import request from 'supertest';
+import express from 'express';
+import { IPRestrictionMiddleware } from '../src/middleware/ip.restriction';
 
 describe('IP Restriction Middleware', () => {
   let app: any;

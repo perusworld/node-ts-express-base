@@ -34,7 +34,7 @@ export class SessionDatabaseMiddleware {
       cookieName: 'app_session',
       defaultSession: 'default',
       enableSessionIsolation: true,
-      ...options
+      ...options,
     };
   }
 

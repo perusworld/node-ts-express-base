@@ -53,7 +53,7 @@ Copy `env.example` to `.env` and configure the following variables:
 #### Session Database Isolation (Optional)
 
 - `ENABLE_SESSION_ISOLATION` - Enable session-based database isolation (default: false)
-- `SESSION_PREFIX` - Prefix for session database files (default: session_)
+- `SESSION_PREFIX` - Prefix for session database files (default: session\_)
 - `MAX_SESSIONS` - Maximum number of concurrent sessions (default: 100)
 - `SESSION_TIMEOUT` - Session timeout in milliseconds (default: 1800000)
 - `SESSION_HEADER` - HTTP header name for session key (default: X-App-Session)

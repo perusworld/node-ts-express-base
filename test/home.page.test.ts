@@ -1,7 +1,7 @@
-export {};
-let request = require('supertest');
-let server = require('../src/server');
-let serverInstance = server.Server.bootstrap();
+import request from 'supertest';
+import { Server } from '../src/server';
+
+let serverInstance = Server.bootstrap();
 let app = serverInstance.app;
 
 beforeAll(() => {

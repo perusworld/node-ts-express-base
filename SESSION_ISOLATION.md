@@ -119,16 +119,16 @@ const sessionKey = 'demo_user_' + Date.now();
 // All API calls use the same session
 fetch('/api/v1/cms/users', {
   headers: {
-    'X-App-Session': sessionKey
-  }
+    'X-App-Session': sessionKey,
+  },
 });
 
 fetch('/api/v1/cms/users', {
   headers: {
-    'X-App-Session': sessionKey
+    'X-App-Session': sessionKey,
   },
   method: 'POST',
-  body: JSON.stringify({ name: 'John', email: 'john@example.com' })
+  body: JSON.stringify({ name: 'John', email: 'john@example.com' }),
 });
 ```
 
@@ -166,6 +166,7 @@ curl http://localhost:3000/api/v1/sessions/stats
 ```
 
 Response:
+
 ```json
 {
   "activeSessions": 5,
@@ -183,11 +184,13 @@ curl http://localhost:3000/api/v1/sessions/cleanup
 ## Migration from Non-Session Mode
 
 When `ENABLE_SESSION_ISOLATION=false` (default):
+
 - All requests use the same database instance
 - No changes to existing code required
 - Backward compatibility maintained
 
 When `ENABLE_SESSION_ISOLATION=true`:
+
 - Add session keys to requests
 - Each session gets isolated data
 - Existing data remains in default session
@@ -195,16 +198,19 @@ When `ENABLE_SESSION_ISOLATION=true`:
 ## Troubleshooting
 
 ### Session Not Working
+
 1. Check if `ENABLE_SESSION_ISOLATION=true`
 2. Verify session key is being sent correctly
 3. Check server logs for session creation messages
 
 ### Memory Issues
+
 1. Reduce `MAX_SESSIONS` value
 2. Reduce `SESSION_TIMEOUT` value
 3. Implement periodic cleanup
 
 ### Data Persistence
+
 - Each session can save/load its own database file
 - File names include session ID for isolation
 - Default session uses original database file

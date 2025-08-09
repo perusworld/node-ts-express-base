@@ -22,7 +22,7 @@ export class DatabaseFactory {
       sessionPrefix: 'session_',
       maxSessions: 100,
       sessionTimeout: 30 * 60 * 1000, // 30 minutes
-      ...config
+      ...config,
     };
   }
 
@@ -31,7 +31,7 @@ export class DatabaseFactory {
    */
   public getDatabase(sessionKey: string): Database {
     const sessionId = this.normalizeSessionKey(sessionKey);
-    
+
     // Check if session exists and is not expired
     if (this.databases.has(sessionId)) {
       const lastAccess = this.sessionTimestamps.get(sessionId);
@@ -47,7 +47,7 @@ export class DatabaseFactory {
     // Create new session if under limit
     if (this.databases.size >= this.config.maxSessions!) {
       this.cleanupExpiredSessions();
-      
+
       if (this.databases.size >= this.config.maxSessions!) {
         // Remove oldest session
         const oldestSession = this.getOldestSession();
@@ -60,7 +60,7 @@ export class DatabaseFactory {
     // Create new database instance
     const sessionConfig: DatabaseConfig = {
       ...this.config,
-      path: this.config.path ? `${this.config.path}_${sessionId}` : ''
+      path: this.config.path ? `${this.config.path}_${sessionId}` : '',
     };
 
     const database = new InMemoryDatabase(sessionConfig);
@@ -78,11 +78,11 @@ export class DatabaseFactory {
     const sessionId = this.normalizeSessionKey(sessionKey);
     const removed = this.databases.delete(sessionId);
     this.sessionTimestamps.delete(sessionId);
-    
+
     if (removed) {
       logger.debug(`Removed database instance for session: ${sessionId}`);
     }
-    
+
     return removed;
   }
 
@@ -107,7 +107,7 @@ export class DatabaseFactory {
     }
 
     expiredSessions.forEach(sessionId => this.removeSession(sessionId));
-    
+
     if (expiredSessions.length > 0) {
       logger.debug(`Cleaned up ${expiredSessions.length} expired sessions`);
     }
@@ -122,7 +122,7 @@ export class DatabaseFactory {
     return {
       activeSessions: this.databases.size,
       maxSessions: this.config.maxSessions,
-      sessionTimeout: this.config.sessionTimeout
+      sessionTimeout: this.config.sessionTimeout,
     };
   }
 

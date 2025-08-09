@@ -9,7 +9,7 @@ describe('Session Database Isolation', () => {
     // Set environment variable to enable session isolation
     process.env.ENABLE_SESSION_ISOLATION = 'true';
     process.env.SESSION_TIMEOUT = '300000'; // 5 minutes for testing
-    
+
     server = Server.bootstrap();
     await server.init();
     app = server.app;
@@ -36,18 +36,14 @@ describe('Session Database Isolation', () => {
         .send({ name: 'Bob', email: 'bob@example.com' });
 
       // Verify session A only sees its own data
-      const responseA = await request(app)
-        .get('/api/v1/cms/users')
-        .set('X-App-Session', sessionA);
+      const responseA = await request(app).get('/api/v1/cms/users').set('X-App-Session', sessionA);
 
       expect(responseA.status).toBe(200);
       expect(responseA.body).toHaveLength(1);
       expect(responseA.body[0].name).toBe('Alice');
 
       // Verify session B only sees its own data
-      const responseB = await request(app)
-        .get('/api/v1/cms/users')
-        .set('X-App-Session', sessionB);
+      const responseB = await request(app).get('/api/v1/cms/users').set('X-App-Session', sessionB);
 
       expect(responseB.status).toBe(200);
       expect(responseB.body).toHaveLength(1);
@@ -56,13 +52,10 @@ describe('Session Database Isolation', () => {
 
     it('should use default session when no session key provided', async () => {
       // Create data without session key (uses default)
-      await request(app)
-        .post('/api/v1/cms/save/users')
-        .send({ name: 'Default User', email: 'default@example.com' });
+      await request(app).post('/api/v1/cms/save/users').send({ name: 'Default User', email: 'default@example.com' });
 
       // Verify default session data
-      const response = await request(app)
-        .get('/api/v1/cms/users');
+      const response = await request(app).get('/api/v1/cms/users');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -71,15 +64,13 @@ describe('Session Database Isolation', () => {
 
     it('should support query parameter session keys', async () => {
       const sessionKey = 'query_session';
-      
+
       await request(app)
         .post('/api/v1/cms/save/users')
         .query({ session: sessionKey })
         .send({ name: 'Query User', email: 'query@example.com' });
 
-      const response = await request(app)
-        .get('/api/v1/cms/users')
-        .query({ session: sessionKey });
+      const response = await request(app).get('/api/v1/cms/users').query({ session: sessionKey });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -89,7 +80,7 @@ describe('Session Database Isolation', () => {
     it('should sanitize session keys', async () => {
       const maliciousKey = '../../../etc/passwd';
       const sanitizedKey = '_________etc_passwd'; // 9 underscores for 9 dots/slashes
-      
+
       // Create data with malicious key (should be sanitized)
       await request(app)
         .post('/api/v1/cms/save/users')
@@ -97,18 +88,14 @@ describe('Session Database Isolation', () => {
         .send({ name: 'Sanitized User', email: 'sanitized@example.com' });
 
       // Verify data is accessible with sanitized key
-      const response = await request(app)
-        .get('/api/v1/cms/users')
-        .set('X-App-Session', sanitizedKey);
+      const response = await request(app).get('/api/v1/cms/users').set('X-App-Session', sanitizedKey);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
       expect(response.body[0].name).toBe('Sanitized User');
 
       // Verify malicious key also works (because it gets sanitized to the same key)
-      const maliciousResponse = await request(app)
-        .get('/api/v1/cms/users')
-        .set('X-App-Session', maliciousKey);
+      const maliciousResponse = await request(app).get('/api/v1/cms/users').set('X-App-Session', maliciousKey);
 
       expect(maliciousResponse.status).toBe(200);
       expect(maliciousResponse.body).toHaveLength(1);
@@ -121,8 +108,7 @@ describe('Session Database Isolation', () => {
 
   describe('Session Management', () => {
     it('should return session statistics', async () => {
-      const response = await request(app)
-        .get('/api/v1/sessions/stats');
+      const response = await request(app).get('/api/v1/sessions/stats');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('activeSessions');
@@ -131,8 +117,7 @@ describe('Session Database Isolation', () => {
     });
 
     it('should cleanup expired sessions', async () => {
-      const response = await request(app)
-        .get('/api/v1/sessions/cleanup');
+      const response = await request(app).get('/api/v1/sessions/cleanup');
 
       expect(response.status).toBe(200);
     });
@@ -143,7 +128,7 @@ describe('Session Database Isolation', () => {
       // Temporarily disable session isolation
       const originalValue = process.env.ENABLE_SESSION_ISOLATION;
       process.env.ENABLE_SESSION_ISOLATION = 'false';
-      
+
       // Restart server without session isolation
       await server.cleanup();
       server = Server.bootstrap();
@@ -151,8 +136,7 @@ describe('Session Database Isolation', () => {
       app = server.app;
 
       // Test that API still works
-      const response = await request(app)
-        .get('/api/v1/hello');
+      const response = await request(app).get('/api/v1/hello');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message');
