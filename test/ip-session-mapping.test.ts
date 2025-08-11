@@ -42,7 +42,7 @@ describe('IP-based Session Auto-Mapping', () => {
       expect(response1.status).toBe(200);
       expect(response2.status).toBe(200);
       expect(response1.body.sessionKey).toBe(response2.body.sessionKey);
-      expect(response1.body.sessionKey).toMatch(/^ip_192_168_1_100$/);
+      expect(response1.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
     });
 
     it('should use different session keys for requests from different IPs', async () => {
@@ -55,22 +55,54 @@ describe('IP-based Session Auto-Mapping', () => {
       expect(response1.status).toBe(200);
       expect(response2.status).toBe(200);
       expect(response1.body.sessionKey).not.toBe(response2.body.sessionKey);
-      expect(response1.body.sessionKey).toMatch(/^ip_192_168_1_100$/);
-      expect(response2.body.sessionKey).toMatch(/^ip_192_168_1_101$/);
+      expect(response1.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
+      expect(response2.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
     });
 
     it('should handle IPv6 addresses', async () => {
       const response = await request(app).get('/api/v1/hello').set('X-Forwarded-For', '2001:db8::1');
 
       expect(response.status).toBe(200);
-      expect(response.body.sessionKey).toMatch(/^ip_2001_db8__1$/);
+      expect(response.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
     });
 
-    it('should sanitize special characters in IP addresses', async () => {
+    it('should obfuscate IP addresses with special characters', async () => {
       const response = await request(app).get('/api/v1/hello').set('X-Forwarded-For', '192.168.1.100:8080');
 
       expect(response.status).toBe(200);
-      expect(response.body.sessionKey).toMatch(/^ip_192_168_1_100_8080$/);
+      expect(response.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
+    });
+
+    it('should generate different hashes for different IP addresses', async () => {
+      const response1 = await request(app).get('/api/v1/hello').set('X-Forwarded-For', '192.168.1.100');
+      const response2 = await request(app).get('/api/v1/hello').set('X-Forwarded-For', '192.168.1.101');
+
+      expect(response1.status).toBe(200);
+      expect(response2.status).toBe(200);
+
+      // Both should be valid hashes
+      expect(response1.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
+      expect(response2.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
+
+      // They should be different
+      expect(response1.body.sessionKey).not.toBe(response2.body.sessionKey);
+
+      // Verify they start with the prefix
+      expect(response1.body.sessionKey).toMatch(/^ip_/);
+      expect(response2.body.sessionKey).toMatch(/^ip_/);
+    });
+
+    it('should generate consistent hashes for the same IP address', async () => {
+      const ip = '10.0.0.1';
+      const response1 = await request(app).get('/api/v1/hello').set('X-Forwarded-For', ip);
+      const response2 = await request(app).get('/api/v1/hello').set('X-Forwarded-For', ip);
+
+      expect(response1.status).toBe(200);
+      expect(response2.status).toBe(200);
+
+      // Both should generate the same hash
+      expect(response1.body.sessionKey).toBe(response2.body.sessionKey);
+      expect(response1.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
     });
 
     it('should prioritize explicit session keys over auto-mapping', async () => {
@@ -89,7 +121,7 @@ describe('IP-based Session Auto-Mapping', () => {
       const response = await request(app).get('/api/v1/hello').set('X-Forwarded-For', 'unknown');
 
       expect(response.status).toBe(200);
-      expect(response.body.sessionKey).toMatch(/^ip_unknown$/);
+      expect(response.body.sessionKey).toMatch(/^ip_[a-f0-9]{16}$/);
     });
   });
 
@@ -151,8 +183,8 @@ describe('IP-based Session Auto-Mapping', () => {
       expect(response.body).toHaveProperty('totalMappings');
       expect(response.body).toHaveProperty('mappings');
       expect(response.body.totalMappings).toBeGreaterThanOrEqual(2);
-      expect(response.body.mappings['192.168.1.100']).toBe('ip_192_168_1_100');
-      expect(response.body.mappings['192.168.1.101']).toBe('ip_192_168_1_101');
+      expect(response.body.mappings['192.168.1.100']).toMatch(/^ip_[a-f0-9]{16}$/);
+      expect(response.body.mappings['192.168.1.101']).toMatch(/^ip_[a-f0-9]{16}$/);
     });
 
     it('should allow clearing IP-session mappings', async () => {

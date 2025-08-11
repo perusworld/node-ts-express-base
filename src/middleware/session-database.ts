@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { DatabaseFactory } from '../db-factory';
 import { Database } from '../db';
 import { getLogger } from '../util';
+import * as crypto from 'crypto';
 
 const logger = getLogger('SessionDatabaseMiddleware');
 
@@ -68,10 +69,11 @@ export class SessionDatabaseMiddleware {
    * Generate session key from IP address
    */
   private generateIPSessionKey(ip: string): string {
-    // Sanitize IP address for use in session key
-    // Replace dots and colons with underscores for safe session key
-    const sanitizedIP = ip.replace(/[.:]/g, '_');
-    return `${this.options.ipSessionPrefix}${sanitizedIP}`;
+    // Create a hash of the IP address for obfuscation
+    // Use SHA-256 and take first 16 characters for reasonable length
+    const hash = crypto.createHash('sha256').update(ip).digest('hex').substring(0, 16);
+    logger.debug(`Generated IP session key for ${ip}: ${hash}, prefix: ${this.options.ipSessionPrefix}`);
+    return `${this.options.ipSessionPrefix}${hash}`;
   }
 
   /**

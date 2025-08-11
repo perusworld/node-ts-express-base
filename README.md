@@ -146,15 +146,17 @@ When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are 
 
 1. **Request without session key**: When a request comes in without a session key in header, query parameter, or cookie
 2. **IP detection**: The client's IP address is extracted using the same logic as IP restriction middleware
-3. **Session key generation**: A session key is generated in the format `ip_<sanitized_ip_address>`
+3. **Session key generation**: A session key is generated in the format `ip_<hashed_ip_address>` (16-character SHA-256 hash)
 4. **Session mapping**: The IP address is mapped to this session key for future requests
 5. **Data isolation**: Each IP gets its own isolated database instance
 
 ### Example:
 
-- Request from `192.168.1.100` without session key → Session key: `ip_192_168_1_100`
-- Request from `2001:db8::1` without session key → Session key: `ip_2001_db8__1`
+- Request from `192.168.1.100` without session key → Session key: `ip_a1b2c3d4e5f6g7h8` (hashed)
+- Request from `2001:db8::1` without session key → Session key: `ip_5afd19e856d1c18d` (hashed)
 - Request with explicit session key → Uses the explicit session key (auto-mapping is bypassed)
+
+**Note**: IP addresses are cryptographically hashed for security and privacy. The same IP will always generate the same session key, but the original IP cannot be derived from the session key.
 
 ### API Endpoints:
 

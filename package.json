@@ -1,6 +1,6 @@
 {
   "name": "node-ts-express-base",
-  "version": "9.0.0",
+  "version": "9.1.0",
   "description": "Node.js TypeScript Express - Base",
   "scripts": {
     "test": "jest",
@@ -10,8 +10,8 @@
     "start:watch": "nodemon",
     "dev": "concurrently npm:start:*",
     "postinstall": "webpack",
-    "format": "prettier --write \"**/*.{js,ts,json,md,html,css}\"",
-    "format:check": "prettier --check \"**/*.{js,ts,json,md,html,css}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "npm run format:check"
   },
   "jest": {
