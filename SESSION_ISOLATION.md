@@ -1,10 +1,10 @@
-# Session Database Isolation
+# Session Database Isolation & IP-Based Session Mapping
 
-This feature provides isolated database instances per app session, allowing multiple users to work with their own data without interference.
+This feature provides isolated database instances per app session, allowing multiple users to work with their own data without interference. It also includes automatic session key generation based on client IP addresses.
 
 ## Overview
 
-When enabled, each request can specify a session key that determines which database instance to use. This prevents data corruption between different users or demo sessions.
+When enabled, each request can specify a session key that determines which database instance to use. This prevents data corruption between different users or demo sessions. Additionally, when IP-based mapping is enabled, session keys are automatically generated for requests without explicit session keys.
 
 ## Configuration
 
@@ -26,6 +26,28 @@ SESSION_HEADER=X-App-Session
 SESSION_QUERY_PARAM=session
 SESSION_COOKIE=app_session
 DEFAULT_SESSION=default
+
+# Auto-mapping Session Keys by IP (Optional)
+AUTO_MAP_SESSION_BY_IP=true
+IP_SESSION_PREFIX=ip_
+```
+
+### Complete Example .env Configuration
+
+```bash
+# Session Database Isolation (Optional)
+ENABLE_SESSION_ISOLATION=true
+SESSION_PREFIX=session_
+MAX_SESSIONS=100
+SESSION_TIMEOUT=1800000
+SESSION_HEADER=X-App-Session
+SESSION_QUERY_PARAM=session
+SESSION_COOKIE=app_session
+DEFAULT_SESSION=default
+
+# Auto-mapping Session Keys by IP (Optional)
+AUTO_MAP_SESSION_BY_IP=true
+IP_SESSION_PREFIX=ip_
 ```
 
 ## Usage
@@ -52,6 +74,26 @@ curl -H "Cookie: app_session=user123" http://localhost:3000/api/v1/cms/users
 
 If no session key is provided, the `DEFAULT_SESSION` value is used.
 
+### 5. Automatic IP-Based Session Mapping
+
+When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are set, the application will automatically generate session keys based on client IP addresses when no explicit session key is provided in the request.
+
+#### How it works:
+
+1. **Request without session key**: When a request comes in without a session key in header, query parameter, or cookie
+2. **IP detection**: The client's IP address is extracted using the same logic as IP restriction middleware
+3. **Session key generation**: A session key is generated in the format `ip_<hashed_ip_address>` (16-character SHA-256 hash)
+4. **Session mapping**: The IP address is mapped to this session key for future requests
+5. **Data isolation**: Each IP gets its own isolated database instance
+
+#### Example:
+
+- Request from `192.168.1.100` without session key → Session key: `ip_a1b2c3d4e5f6g7h8` (hashed)
+- Request from `2001:db8::1` without session key → Session key: `ip_5afd19e856d1c18d` (hashed)
+- Request with explicit session key → Uses the explicit session key (auto-mapping is bypassed)
+
+**Note**: IP addresses are cryptographically hashed for security and privacy. The same IP will always generate the same session key, but the original IP cannot be derived from the session key.
+
 ## API Endpoints
 
 ### Session Management (when enabled)
@@ -59,6 +101,11 @@ If no session key is provided, the `DEFAULT_SESSION` value is used.
 - `GET /api/v1/sessions/stats` - Get session statistics
 - `GET /api/v1/sessions/cleanup` - Cleanup expired sessions
 - `DELETE /api/v1/sessions/:sessionKey` - Remove specific session
+
+### IP-Based Session Mapping
+
+- `GET /api/v1/sessions/ip-mappings` - Get IP-session mapping statistics
+- `DELETE /api/v1/sessions/ip-mappings` - Clear all IP-session mappings
 
 ### CMS Endpoints (session-aware)
 
@@ -74,39 +121,6 @@ All CMS endpoints automatically use the session database:
 - `GET /api/v1/cms/reset-all` - Delete all data
 - `POST /api/v1/cms/save-db` - Save database to file
 - `POST /api/v1/cms/load-db` - Load database from file
-
-## Architecture
-
-### Components
-
-1. **DatabaseFactory** (`src/db-factory.ts`)
-   - Manages multiple database instances
-   - Handles session lifecycle (creation, expiration, cleanup)
-   - Provides session statistics
-
-2. **SessionDatabaseMiddleware** (`src/middleware/session-database.ts`)
-   - Extracts session keys from requests
-   - Attaches appropriate database to request
-   - Handles session key normalization and security
-
-3. **Updated CMS Route** (`src/cms.ts`)
-   - Uses session database when available
-   - Falls back to default database
-   - Maintains backward compatibility
-
-### Session Key Sources (Priority Order)
-
-1. HTTP Header (`X-App-Session`)
-2. Query Parameter (`?session=key`)
-3. Cookie (`app_session`)
-4. Default Session (`default`)
-
-### Security Features
-
-- Session key sanitization (prevents path traversal)
-- Session timeout (automatic cleanup)
-- Maximum session limit
-- Input validation
 
 ## Example Use Cases
 
@@ -150,12 +164,20 @@ curl -H "X-App-Session: user_a" http://localhost:3000/api/v1/cms/users
 curl -H "X-App-Session: user_b" http://localhost:3000/api/v1/cms/users
 ```
 
-## Performance Considerations
+### IP-Based Session Mapping
 
-- Each session maintains its own in-memory database
-- Sessions are automatically cleaned up after timeout
-- Maximum session limit prevents memory exhaustion
-- Database operations remain fast (in-memory)
+```bash
+# Request from IP 192.168.1.100 without session key
+# Automatically gets session key like "ip_a1b2c3d4e5f6g7h8"
+curl http://localhost:3000/api/v1/cms/users
+
+# Same IP, same session key automatically used
+curl http://localhost:3000/api/v1/cms/users
+
+# Different IP gets different session key automatically
+# (from different machine or using different network)
+curl http://localhost:3000/api/v1/cms/users
+```
 
 ## Monitoring
 
@@ -173,6 +195,12 @@ Response:
   "maxSessions": 100,
   "sessionTimeout": 1800000
 }
+```
+
+### IP-Session Mapping Statistics
+
+```bash
+curl http://localhost:3000/api/v1/sessions/ip-mappings
 ```
 
 ### Manual Cleanup
@@ -194,6 +222,7 @@ When `ENABLE_SESSION_ISOLATION=true`:
 - Add session keys to requests
 - Each session gets isolated data
 - Existing data remains in default session
+- IP-based mapping can provide automatic session keys
 
 ## Troubleshooting
 
@@ -202,6 +231,12 @@ When `ENABLE_SESSION_ISOLATION=true`:
 1. Check if `ENABLE_SESSION_ISOLATION=true`
 2. Verify session key is being sent correctly
 3. Check server logs for session creation messages
+
+### IP-Based Mapping Not Working
+
+1. Ensure `AUTO_MAP_SESSION_BY_IP=true`
+2. Check that `ENABLE_SESSION_ISOLATION=true`
+3. Verify IP detection is working (check IP restriction logs)
 
 ### Memory Issues
 
@@ -214,3 +249,4 @@ When `ENABLE_SESSION_ISOLATION=true`:
 - Each session can save/load its own database file
 - File names include session ID for isolation
 - Default session uses original database file
+- IP-based sessions use hashed IP in filename

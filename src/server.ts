@@ -13,6 +13,7 @@ import { CMSRoute } from './cms';
 import { IPRestrictionMiddleware } from './middleware/ip.restriction';
 import { SessionDatabaseMiddleware } from './middleware/session-database';
 import { DatabaseFactory } from './db-factory';
+import { TaskAPIRoute, TaskManager, TaskExecutionService, TaskCleanupService, TaskDemoAPI } from './task';
 
 /**
  * The server.
@@ -27,6 +28,13 @@ export class Server {
   private dbFactory?: DatabaseFactory;
   private sessionMiddleware?: SessionDatabaseMiddleware;
   private cfg = {} as any;
+
+  // Task system components
+  private taskManager?: TaskManager;
+  private taskExecutionService?: TaskExecutionService;
+  private taskCleanupService?: TaskCleanupService;
+  private taskAPIRoute?: TaskAPIRoute;
+  private taskDemoAPI?: TaskDemoAPI;
 
   /**
    * Bootstrap the application.
@@ -58,6 +66,9 @@ export class Server {
     if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
       this.initializeSessionDatabase();
     }
+
+    // Initialize task system
+    this.initializeTaskSystem();
   }
 
   /**
@@ -92,6 +103,40 @@ export class Server {
     }
   }
 
+  /**
+   * Initialize task system components
+   */
+  private initializeTaskSystem() {
+    if (!this.dbFactory) {
+      console.log('Task system requires session database to be enabled');
+      return;
+    }
+
+    // Initialize task manager
+    this.taskManager = new TaskManager();
+
+    // Initialize task execution service
+    this.taskExecutionService = new TaskExecutionService(this.dbFactory);
+
+    // Initialize task cleanup service with default options
+    this.taskCleanupService = new TaskCleanupService(this.dbFactory, this.taskManager, {
+      maxCompletedTasks: parseInt(process.env.MAX_COMPLETED_TASKS || '50'),
+      maxFailedTasks: parseInt(process.env.MAX_FAILED_TASKS || '20'),
+      cleanupInterval: parseInt(process.env.TASK_CLEANUP_INTERVAL || '300000'), // 5 minutes
+    });
+
+    // Initialize task API routes
+    this.taskAPIRoute = new TaskAPIRoute(this.taskManager, this.taskExecutionService, this.taskCleanupService);
+
+    // Initialize demo API routes
+    this.taskDemoAPI = new TaskDemoAPI(this.taskManager, this.taskExecutionService);
+
+    // Start the cleanup service
+    this.taskCleanupService.start();
+
+    console.log('Task system initialized successfully');
+  }
+
   public async init(): Promise<boolean> {
     let ret = false;
     //configure application
@@ -109,7 +154,31 @@ export class Server {
   }
 
   public async cleanup(): Promise<boolean> {
-    return true;
+    try {
+      // Stop task cleanup service if running
+      if (this.taskCleanupService) {
+        this.taskCleanupService.stop();
+      }
+
+      // Stop any running task executions
+      if (this.taskExecutionService) {
+        // Cancel all running tasks
+        await this.taskExecutionService.cancelAllRunningTasks();
+      }
+
+      // Cleanup all sessions and databases
+      if (this.dbFactory) {
+        this.dbFactory.cleanupExpiredSessions();
+      }
+
+      // Wait for any pending operations to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      return true;
+    } catch (error) {
+      console.error('Error during server cleanup:', error);
+      return false;
+    }
   }
 
   public async tasks(): Promise<boolean> {
@@ -151,6 +220,17 @@ export class Server {
     apiRoutes.buildRoutes(router);
     let cmsRoutes = new CMSRoute(this.db);
     cmsRoutes.buildRoutes(router);
+
+    // Add task routes if task system is initialized
+    if (this.taskAPIRoute) {
+      this.taskAPIRoute.buildRoutes(router);
+    }
+
+    // Add demo task routes if task system is initialized
+    if (this.taskDemoAPI) {
+      this.taskDemoAPI.buildRoutes(router);
+    }
+
     this.app.use('/api/v1', router);
   }
 
@@ -218,5 +298,20 @@ export class Server {
    */
   public cleanupSessions(): number {
     return this.sessionMiddleware?.cleanupSessions() || 0;
+  }
+
+  /**
+   * Get task system status
+   */
+  public getTaskSystemStatus() {
+    if (!this.taskCleanupService) {
+      return { enabled: false, message: 'Task system not initialized' };
+    }
+
+    return {
+      enabled: true,
+      cleanupStatus: this.taskCleanupService.getStatus(),
+      runningTasks: this.taskExecutionService?.getRunningTasks() || [],
+    };
   }
 }

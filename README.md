@@ -1,73 +1,35 @@
 # Node.js TypeScript Express - Base
 
-A robust Node.js TypeScript Express base project with Socket.IO support, IP restrictions, logging, and comprehensive environment variable configuration.
+A robust Node.js TypeScript Express base project with Socket.IO support, IP restrictions, logging, session isolation, and async task processing capabilities.
 
-## Features
+## 🚀 Features
 
 - **TypeScript** - Full TypeScript support with proper configuration
 - **Express.js** - Latest Express.js framework
 - **Socket.IO** - Optional WebSocket support
 - **IP Restrictions** - Configurable IP address restrictions
 - **Logging** - Winston-based logging with configurable levels
-- **Environment Variables** - Comprehensive configuration via environment variables
+- **Session Database Isolation** - Isolated database instances per session
+- **Async Task System** - Background task processing with progress tracking
 - **Testing** - Jest testing framework setup
 - **Webpack** - Asset bundling and development tools
-- **Session Database Isolation** - Optional isolated database instances per session (see [SESSION_ISOLATION.md](SESSION_ISOLATION.md))
-- **Auto-mapping Session Keys by IP** - Automatic session key generation based on client IP addresses
 
-## Installation
+## 📋 Prerequisites
+
+- Node.js (v22 or higher)
+- npm or yarn
+
+## 🛠️ Installation
 
 ```bash
 npm install
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-This project uses [dotenv](https://github.com/motdotla/dotenv) for environment variable management. Create a `.env` file in the root directory and add your configuration.
+This project uses [dotenv](https://github.com/motdotla/dotenv) for environment variable management. Copy `env.example` to `.env` and configure the following variables:
 
-### Environment Variables
-
-Copy `env.example` to `.env` and configure the following variables:
-
-#### Server Configuration
-
-- `PORT` - Server port (default: 3000)
-- `WITH_SOCKETIO` - Enable Socket.IO support (default: false)
-
-#### Application Configuration
-
-- `TIME_ZONE` - Application timezone (default: America/Los_Angeles)
-- `CONFIG` - Configuration directory (default: config)
-
-#### Logging Configuration
-
-- `BE_LOG_LEVEL` - Log level (debug, info, warn, error)
-- `BE_APP_NAME` - Application name for logging
-- `BE_LOG_FORMAT` - Log format (simple, json, etc.)
-
-#### IP Restriction Configuration
-
-- `IP_RESTRICTION_ENABLED` - Enable IP restriction (default: true)
-- `ALLOWED_IPS` - Comma-separated list of allowed IP addresses
-- `ALLOW_LOCAL_ADDRESSES` - Allow local address access (default: true)
-
-#### Session Database Isolation (Optional)
-
-- `ENABLE_SESSION_ISOLATION` - Enable session-based database isolation (default: true)
-- `SESSION_PREFIX` - Prefix for session database files (default: session\_)
-- `MAX_SESSIONS` - Maximum number of concurrent sessions (default: 100)
-- `SESSION_TIMEOUT` - Session timeout in milliseconds (default: 1800000)
-- `SESSION_HEADER` - HTTP header name for session key (default: X-App-Session)
-- `SESSION_QUERY_PARAM` - Query parameter name for session key (default: session)
-- `SESSION_COOKIE` - Cookie name for session key (default: app_session)
-- `DEFAULT_SESSION` - Default session key when none provided (default: default)
-
-#### Auto-mapping Session Keys by IP (Optional)
-
-- `AUTO_MAP_SESSION_BY_IP` - Enable automatic session key generation based on client IP (default: true)
-- `IP_SESSION_PREFIX` - Prefix for auto-generated IP-based session keys (default: ip\_)
-
-### Example .env file
+### Essential Configuration
 
 ```bash
 # Server Configuration
@@ -88,22 +50,19 @@ IP_RESTRICTION_ENABLED=true
 ALLOWED_IPS=192.168.1.100,10.0.0.50
 ALLOW_LOCAL_ADDRESSES=true
 
-# Session Database Isolation (Optional)
+# Session Database Isolation
 ENABLE_SESSION_ISOLATION=true
-SESSION_PREFIX=session_
-MAX_SESSIONS=100
-SESSION_TIMEOUT=1800000
-SESSION_HEADER=X-App-Session
-SESSION_QUERY_PARAM=session
-SESSION_COOKIE=app_session
-DEFAULT_SESSION=default
-
-# Auto-mapping Session Keys by IP (Optional)
 AUTO_MAP_SESSION_BY_IP=true
-IP_SESSION_PREFIX=ip_
 ```
 
-## Running the Application
+### Advanced Configuration
+
+For complete configuration options, see:
+
+- **[SESSION_ISOLATION.md](SESSION_ISOLATION.md)** - Session isolation and IP-based session mapping
+- **[TASK_SYSTEM_GUIDE.md](TASK_SYSTEM_GUIDE.md)** - Async task system configuration
+
+## 🏃‍♂️ Quick Start
 
 ### Development Mode
 
@@ -124,12 +83,12 @@ npm start
 npm test
 ```
 
-## URLs
+## 🌐 URLs
 
 - **Local Development**: http://localhost:3000/
 - **Socket.IO Script**: http://localhost:3000/socket.io/socket.io.js (when enabled)
 
-## Scripts
+## 📚 Available Scripts
 
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build the project with Webpack
@@ -138,49 +97,6 @@ npm test
 - `npm run start:watch` - Start with nodemon for development
 - `npm run start:build` - Start Webpack in watch mode
 
-## Auto-mapping Session Keys by IP
-
-When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are set, the application will automatically generate session keys based on client IP addresses when no explicit session key is provided in the request.
-
-### How it works:
-
-1. **Request without session key**: When a request comes in without a session key in header, query parameter, or cookie
-2. **IP detection**: The client's IP address is extracted using the same logic as IP restriction middleware
-3. **Session key generation**: A session key is generated in the format `ip_<hashed_ip_address>` (16-character SHA-256 hash)
-4. **Session mapping**: The IP address is mapped to this session key for future requests
-5. **Data isolation**: Each IP gets its own isolated database instance
-
-### Example:
-
-- Request from `192.168.1.100` without session key → Session key: `ip_a1b2c3d4e5f6g7h8` (hashed)
-- Request from `2001:db8::1` without session key → Session key: `ip_5afd19e856d1c18d` (hashed)
-- Request with explicit session key → Uses the explicit session key (auto-mapping is bypassed)
-
-**Note**: IP addresses are cryptographically hashed for security and privacy. The same IP will always generate the same session key, but the original IP cannot be derived from the session key.
-
-### API Endpoints:
-
-- `GET /api/v1/sessions/ip-mappings` - Get IP-session mapping statistics
-- `DELETE /api/v1/sessions/ip-mappings` - Clear all IP-session mappings
-
-## Project Structure
-
-```
-├── bin/www                 # Application entry point
-├── config/                 # Configuration files
-├── database/               # Database related files
-├── public/                 # Static assets
-├── src/                    # Source code
-│   ├── middleware/         # Express middleware
-│   ├── api.ts             # API routes
-│   ├── controller.ts      # Controllers
-│   ├── server.ts          # Server setup
-│   └── ...
-├── test/                   # Test files
-├── views/                  # Pug templates
-└── package.json           # Dependencies and scripts
-```
-
-## License
+## 📄 License
 
 MIT License - see LICENSE file for details

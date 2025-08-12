@@ -1,6 +1,6 @@
 {
   "name": "node-ts-express-base",
-  "version": "9.1.0",
+  "version": "9.2.0",
   "description": "Node.js TypeScript Express - Base",
   "scripts": {
     "test": "jest",
@@ -29,7 +29,14 @@
       "ts",
       "tsx",
       "js"
-    ]
+    ],
+    "testTimeout": 10000,
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.ts"
+    ],
+    "forceExit": true,
+    "detectOpenHandles": true,
+    "maxWorkers": 1
   },
   "repository": {
     "type": "git",
