@@ -1,7 +1,7 @@
 {
   "name": "node-ts-express-base",
-  "version": "9.2.0",
-  "description": "Node.js TypeScript Express - Base",
+  "version": "9.3.0",
+  "description": "Node.js TypeScript Express - Prototype Backend for Demos & Rapid Prototyping",
   "scripts": {
     "test": "jest",
     "build": "webpack",

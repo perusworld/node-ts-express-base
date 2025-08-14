@@ -94,6 +94,14 @@ export class TaskManager {
       task.progress = Math.max(0, Math.min(100, updates.progress));
     }
 
+    if (updates.currentStep !== undefined) {
+      task.currentStep = updates.currentStep;
+    }
+
+    if (updates.currentStepDescription !== undefined) {
+      task.currentStepDescription = updates.currentStepDescription;
+    }
+
     if (updates.error !== undefined) {
       task.error = updates.error;
     }

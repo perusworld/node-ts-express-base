@@ -1,4 +1,10 @@
-# 🚀 Async Task System - Complete Usage Guide
+# 🚀 Async Task System - Prototype & Demo Guide
+
+## Overview
+
+The Async Task System is designed for **prototyping and demonstrating background task processing capabilities**. It provides realistic workflow simulations with progress tracking, making it perfect for client presentations and proof-of-concept development.
+
+**Note: This is a prototype system using in-memory storage. Tasks are lost on server restart.**
 
 ## Prerequisites
 
@@ -62,6 +68,8 @@ curl http://localhost:3000/api/v1/tasks/UUID_HERE/status
   "success": true,
   "status": "running",
   "progress": 45,
+  "currentStep": "Processing Data",
+  "currentStepDescription": "Analyzing input data and preparing output",
   "startedAt": 1234567890,
   "completedAt": null,
   "error": null
@@ -100,8 +108,6 @@ curl http://localhost:3000/api/v1/tasks
 - `POST /api/v1/tasks` - Create task
 - `GET /api/v1/tasks` - List tasks (session-scoped)
 - `GET /api/v1/tasks/:id` - Get task details
-- `PUT /api/v1/tasks/:id` - Update task
-- `DELETE /api/v1/tasks/:id` - Delete task
 
 ### Task Control
 
@@ -111,8 +117,32 @@ curl http://localhost:3000/api/v1/tasks
 
 ### Task Information
 
-- `GET /api/v1/tasks/:id/status` - Get status and progress
+- `GET /api/v1/tasks/:id/status` - Get status and progress with enhanced step information
 - `GET /api/v1/tasks/stats` - Get session statistics
+
+### Cleanup Service
+
+- `GET /api/v1/tasks/cleanup/status` - Get cleanup service status
+- `POST /api/v1/tasks/cleanup/run` - Run manual cleanup
+
+## Security Features
+
+### Immutable Task Execution
+
+- **No Manual Updates**: Tasks cannot be manually modified once created
+- **Controlled State Transitions**: Only predefined operations can change task status
+- **Progress Integrity**: Progress can only be updated by executors, not manually
+- **Audit Trail**: Complete task history is preserved for compliance
+
+### Enhanced Step Information
+
+The task status endpoint now returns rich step information:
+
+- `currentStep`: Current step name (e.g., "Processing Data")
+- `currentStepDescription`: Detailed description of current step
+- `progress`: Numeric progress (0-100)
+- `status`: Current task status
+- `startedAt`/`completedAt`: Execution timestamps
 
 ### Demo Endpoints
 

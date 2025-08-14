@@ -39,8 +39,8 @@ export class TaskExecutionService {
       await this.updateTaskProgress(sessionKey, taskId, 0, TaskStatus.RUNNING);
 
       // Execute the task with progress callbacks
-      await executor.execute(task, async (progress: number) => {
-        await this.updateTaskProgress(sessionKey, taskId, progress);
+      await executor.execute(task, async (progress: number, step?: string, stepDescription?: string) => {
+        await this.updateTaskProgress(sessionKey, taskId, progress, undefined, undefined, step, stepDescription);
       });
 
       // Mark as completed
@@ -65,7 +65,9 @@ export class TaskExecutionService {
     taskId: string,
     progress: number,
     status?: TaskStatus,
-    error?: string
+    error?: string,
+    step?: string,
+    stepDescription?: string
   ): Promise<void> {
     try {
       const db = this.dbFactory.getDatabase(sessionKey);
@@ -87,6 +89,14 @@ export class TaskExecutionService {
           task.progress = Math.max(0, Math.min(100, progress));
         }
 
+        if (step !== undefined) {
+          task.currentStep = step;
+        }
+
+        if (stepDescription !== undefined) {
+          task.currentStepDescription = stepDescription;
+        }
+
         if (error !== undefined) {
           task.error = error;
         }
@@ -95,7 +105,9 @@ export class TaskExecutionService {
 
         db.createOrUpdate('tasks', task);
 
-        logger.debug(`Updated task ${taskId} for session ${sessionKey}: status=${status}, progress=${progress}`);
+        logger.debug(
+          `Updated task ${taskId} for session ${sessionKey}: status=${status}, progress=${progress}, step=${step}`
+        );
       }
     } catch (error) {
       logger.error(`Failed to update task ${taskId} progress: ${error}`);

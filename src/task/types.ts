@@ -12,6 +12,8 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   progress: number; // 0-100
+  currentStep?: string; // Current step name
+  currentStepDescription?: string; // Current step description
   createdAt: number;
   updatedAt: number;
   startedAt?: number;
@@ -38,12 +40,17 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest {
   status?: TaskStatus;
   progress?: number;
+  currentStep?: string;
+  currentStepDescription?: string;
   error?: string;
   metadata?: Record<string, any>;
 }
 
 export interface TaskExecutor {
-  execute(task: Task, progressCallback: (progress: number) => Promise<void>): Promise<void>;
+  execute(
+    task: Task,
+    progressCallback: (progress: number, step?: string, stepDescription?: string) => Promise<void>
+  ): Promise<void>;
 }
 
 export interface TaskCleanupOptions {

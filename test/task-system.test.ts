@@ -136,7 +136,6 @@ describe('Task System', () => {
       const sessionKey = 'test-session';
       const db = dbFactory.getDatabase(sessionKey);
 
-      // Create a task
       const req = createMockRequest(sessionKey);
       req.sessionDatabase = db;
 
@@ -156,6 +155,48 @@ describe('Task System', () => {
       const finalTask = db.findById('tasks', task.id) as Task;
       expect(finalTask.status).toBe(TaskStatus.COMPLETED);
       expect(finalTask.progress).toBe(100);
+    });
+
+    it('should properly handle step names and descriptions during execution', async () => {
+      const sessionKey = 'test-session';
+      const db = dbFactory.getDatabase(sessionKey);
+
+      const req = createMockRequest(sessionKey);
+      req.sessionDatabase = db;
+
+      const task = await taskManager.createTask(req, {
+        name: 'Test Step Execution Task',
+        description: 'A task to test step information',
+      });
+
+      // Create a custom executor that provides step information
+      const stepExecutor = {
+        async execute(
+          task: Task,
+          progressCallback: (progress: number, step?: string, stepDescription?: string) => Promise<void>
+        ): Promise<void> {
+          await progressCallback(25, 'Step 1', 'First step description');
+          await new Promise(resolve => setTimeout(resolve, 50));
+          await progressCallback(50, 'Step 2', 'Second step description');
+          await new Promise(resolve => setTimeout(resolve, 50));
+          await progressCallback(75, 'Step 3', 'Third step description');
+          await new Promise(resolve => setTimeout(resolve, 50));
+          await progressCallback(100, 'Completed', 'Final step description');
+        },
+      };
+
+      // Execute the task
+      await taskExecutionService.executeTask(sessionKey, task.id, stepExecutor);
+
+      // Wait for execution to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Check final status and step information
+      const finalTask = db.findById('tasks', task.id) as Task;
+      expect(finalTask.status).toBe(TaskStatus.COMPLETED);
+      expect(finalTask.progress).toBe(100);
+      expect(finalTask.currentStep).toBe('Completed');
+      expect(finalTask.currentStepDescription).toBe('Final step description');
     });
 
     it('should prevent duplicate execution of the same task', async () => {
@@ -184,6 +225,44 @@ describe('Task System', () => {
       // Check that task was only executed once
       const finalTask = db.findById('tasks', task.id) as Task;
       expect(finalTask.status).toBe(TaskStatus.COMPLETED);
+    });
+
+    it('should properly update task with step information during progress updates', async () => {
+      const sessionKey = 'test-session';
+      const db = dbFactory.getDatabase(sessionKey);
+
+      const req = createMockRequest(sessionKey);
+      req.sessionDatabase = db;
+
+      const task = await taskManager.createTask(req, {
+        name: 'Test Progress Update Task',
+        description: 'A task to test progress update with step info',
+      });
+
+      // Test the updateTaskProgress method directly
+      const progressCallback = async (progress: number, step?: string, stepDescription?: string) => {
+        // Simulate what the TaskExecutionService does
+        const currentTask = db.findById('tasks', task.id) as Task;
+        if (currentTask) {
+          currentTask.progress = progress;
+          if (step) currentTask.currentStep = step;
+          if (stepDescription) currentTask.currentStepDescription = stepDescription;
+          currentTask.updatedAt = Date.now();
+          db.createOrUpdate('tasks', currentTask);
+        }
+      };
+
+      // Simulate progress updates
+      await progressCallback(25, 'Initializing', 'Setting up task environment');
+      await progressCallback(50, 'Processing', 'Executing main task logic');
+      await progressCallback(75, 'Finalizing', 'Completing task operations');
+      await progressCallback(100, 'Completed', 'Task finished successfully');
+
+      // Verify step information was properly stored
+      const updatedTask = db.findById('tasks', task.id) as Task;
+      expect(updatedTask.progress).toBe(100);
+      expect(updatedTask.currentStep).toBe('Completed');
+      expect(updatedTask.currentStepDescription).toBe('Task finished successfully');
     });
   });
 

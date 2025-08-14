@@ -31,8 +31,6 @@ export class TaskAPIRoute {
 
     // Task control operations - parameterized routes come after specific routes
     router.get('/tasks/:id', this.getTask.bind(this));
-    router.put('/tasks/:id', this.updateTask.bind(this));
-    router.delete('/tasks/:id', this.deleteTask.bind(this));
     router.post('/tasks/:id/start', this.startTask.bind(this));
     router.post('/tasks/:id/cancel', this.cancelTask.bind(this));
     router.post('/tasks/:id/retry', this.retryTask.bind(this));
@@ -76,6 +74,10 @@ export class TaskAPIRoute {
         filters.userId = req.query.userId;
       }
 
+      if (req.query.currentStep) {
+        filters.currentStep = req.query.currentStep;
+      }
+
       const tasks = await this.taskManager.getTasks(req, filters);
       res.json({
         success: true,
@@ -116,67 +118,6 @@ export class TaskAPIRoute {
       res.status(500).json({
         success: false,
         message: 'Failed to get task',
-        error: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Update a task
-   */
-  public async updateTask(req: Request, res: Response, next: NextFunction) {
-    try {
-      const taskId = req.params.id;
-      const updates = req.body;
-
-      const task = await this.taskManager.updateTask(req, taskId, updates);
-
-      if (!task) {
-        return res.status(404).json({
-          success: false,
-          message: 'Task not found',
-        });
-      }
-
-      res.json({
-        success: true,
-        message: 'Task updated successfully',
-        task,
-      });
-    } catch (error) {
-      logger.error('Error updating task:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update task',
-        error: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Delete a task
-   */
-  public async deleteTask(req: Request, res: Response, next: NextFunction) {
-    try {
-      const taskId = req.params.id;
-      const deleted = await this.taskManager.deleteTask(req, taskId);
-
-      if (!deleted) {
-        return res.status(404).json({
-          success: false,
-          message: 'Task not found',
-        });
-      }
-
-      res.json({
-        success: true,
-        message: 'Task deleted successfully',
-      });
-    } catch (error) {
-      logger.error('Error deleting task:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete task',
         error: (error as Error).message,
       });
     }
@@ -311,6 +252,8 @@ export class TaskAPIRoute {
         success: true,
         status: task.status,
         progress: task.progress,
+        currentStep: task.currentStep,
+        currentStepDescription: task.currentStepDescription,
         startedAt: task.startedAt,
         completedAt: task.completedAt,
         error: task.error,

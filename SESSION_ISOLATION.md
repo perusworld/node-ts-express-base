@@ -1,10 +1,33 @@
-# Session Database Isolation & IP-Based Session Mapping
+# Session Database Isolation & IP-Based Session Mapping - Prototype System
 
-This feature provides isolated database instances per app session, allowing multiple users to work with their own data without interference. It also includes automatic session key generation based on client IP addresses.
+This feature provides **in-memory isolated database instances per app session** for prototyping and demonstrating multi-tenant capabilities. It's designed for client presentations, demos, and proof-of-concept development where you need to show isolated data per user without setting up real database infrastructure.
+
+## ⚠️ **Important: Prototype/Demo Purpose**
+
+**This is NOT a production multi-tenant system.** It's designed for:
+
+- **Client demonstrations** showing multi-tenant architecture
+- **Sales presentations** without database setup complexity
+- **Prototyping** multi-tenant features quickly
+- **Development testing** of session-based logic
+
+**Production limitations:**
+
+- All data is stored in-memory (lost on server restart)
+- No persistent storage or backup
+- No database clustering or replication
+- Limited to single server instance
 
 ## Overview
 
-When enabled, each request can specify a session key that determines which database instance to use. This prevents data corruption between different users or demo sessions. Additionally, when IP-based mapping is enabled, session keys are automatically generated for requests without explicit session keys.
+When enabled, each request can specify a session key that determines which in-memory database instance to use. This prevents data corruption between different users or demo sessions. Additionally, when IP-based mapping is enabled, session keys are automatically generated for requests without explicit session keys.
+
+**Perfect for:**
+
+- Showing isolated data per customer in sales demos
+- Demonstrating multi-tenant capabilities to prospects
+- Rapid prototyping of session-based features
+- Client workshops with working examples
 
 ## Configuration
 
@@ -13,7 +36,7 @@ When enabled, each request can specify a session key that determines which datab
 Set `ENABLE_SESSION_ISOLATION=true` in your environment to enable this feature.
 
 ```bash
-# Enable session isolation
+# Enable session isolation (Core demo feature)
 ENABLE_SESSION_ISOLATION=true
 
 # Session configuration
@@ -35,7 +58,7 @@ IP_SESSION_PREFIX=ip_
 ### Complete Example .env Configuration
 
 ```bash
-# Session Database Isolation (Optional)
+# Session Database Isolation (Core Demo Feature)
 ENABLE_SESSION_ISOLATION=true
 SESSION_PREFIX=session_
 MAX_SESSIONS=100
@@ -78,13 +101,15 @@ If no session key is provided, the `DEFAULT_SESSION` value is used.
 
 When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are set, the application will automatically generate session keys based on client IP addresses when no explicit session key is provided in the request.
 
+**Perfect for demo scenarios** where you want each client to see their own isolated data without manual session management.
+
 #### How it works:
 
 1. **Request without session key**: When a request comes in without a session key in header, query parameter, or cookie
 2. **IP detection**: The client's IP address is extracted using the same logic as IP restriction middleware
 3. **Session key generation**: A session key is generated in the format `ip_<hashed_ip_address>` (16-character SHA-256 hash)
 4. **Session mapping**: The IP address is mapped to this session key for future requests
-5. **Data isolation**: Each IP gets its own isolated database instance
+5. **Data isolation**: Each IP gets its own isolated in-memory database instance
 
 #### Example:
 
