@@ -1,0 +1,15 @@
+services:
+  api:
+    build:
+      context: .
+      target: dev
+    command: npm run dev
+    ports:
+      - '3000:3000'
+    environment:
+      # Loads .env values into the container; override/extend per your needs
+      NODE_ENV: development
+      PORT: 3000
+    volumes:
+      - .:/app # live code from host
+      - /app/node_modules # keep container's node_modules (don't override with host)

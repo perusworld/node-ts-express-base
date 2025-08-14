@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
-require('dotenv').config();
+const fs = require('fs');
+
+// Load environment variables - use ENV_FILE path if set, otherwise .env
+const envPath = process.env.ENV_FILE || '.env';
+//print contents of env file
+console.log('Loading environment variables from', envPath, fs.readFileSync(envPath, 'utf8'));
+require('dotenv').config({ path: envPath });
 
 // Module dependencies
 const { Server } = require('../dist/bundle');

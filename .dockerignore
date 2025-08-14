@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+coverage
+dist-coverage
+dist
+.env
+*.swp
+*.log
+.tmp
+.cache

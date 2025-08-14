@@ -1,0 +1,11 @@
+services:
+  api:
+    build:
+      context: .
+      target: runner
+    image: node-ts-express-base
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    restart: unless-stopped
