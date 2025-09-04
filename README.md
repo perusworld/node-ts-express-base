@@ -297,6 +297,7 @@ A separate `dev` target and `docker-compose.dev.yml` are provided for live-reloa
 The session isolation system is the core feature that makes this project perfect for demos. Each user gets their own isolated data space, simulating real multi-tenant architecture without database complexity.
 
 **Key Benefits:**
+
 - **No data cross-contamination** between different client presentations
 - **Automatic session management** based on IP addresses
 - **Realistic multi-tenant experience** for prospects and clients
@@ -312,6 +313,7 @@ The background task processing system demonstrates real-world workflow scenarios
 - **Task management API** for demo interactions
 
 For detailed information, see:
+
 - **[SESSION_ISOLATION.md](SESSION_ISOLATION.md)** - Complete guide to session isolation
 - **[TASK_SYSTEM_GUIDE.md](TASK_SYSTEM_GUIDE.md)** - Comprehensive task system documentation
 
