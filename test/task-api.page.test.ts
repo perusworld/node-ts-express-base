@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { Server } from '../src/server';
+import { jest } from '@jest/globals';
 
 // Set environment variables to enable session isolation
 process.env.ENABLE_SESSION_ISOLATION = 'true';

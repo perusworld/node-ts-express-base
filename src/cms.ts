@@ -31,19 +31,19 @@ export class CMSRoute {
   public async getById(req: Request, res: Response, next: NextFunction) {
     logger.debug('getById %s %s', JSON.stringify(req.params, null, 2));
     const db = this.getDatabase(req);
-    res.json(this.asObject(await db.findById(req.params['name'], req.params['id'])));
+    res.json(this.asObject(await db.findById(req.params['name'] as string, req.params['id'] as string)));
   }
 
   public async deleteById(req: Request, res: Response, next: NextFunction) {
     logger.debug('deleteById %s %s', JSON.stringify(req.params, null, 2));
     const db = this.getDatabase(req);
-    res.json(this.asObject(await db.deleteById(req.params['name'], req.params['id'])));
+    res.json(this.asObject(await db.deleteById(req.params['name'] as string, req.params['id'] as string)));
   }
 
   public async delete(req: Request, res: Response, next: NextFunction) {
     logger.debug('delete %s', JSON.stringify(req.params, null, 2));
     const db = this.getDatabase(req);
-    res.json(await db.deleteByTable(req.params['name']));
+    res.json(await db.deleteByTable(req.params['name'] as string));
   }
 
   public async deleteAll(req: Request, res: Response, next: NextFunction) {
@@ -55,25 +55,25 @@ export class CMSRoute {
   public async save(req: Request, res: Response, next: NextFunction) {
     logger.debug('save %s %s', req.params['name'], JSON.stringify(req.body, null, 2));
     const db = this.getDatabase(req);
-    res.json(await db.createOrUpdate(req.params['name'], req.body));
+    res.json(await db.createOrUpdate(req.params['name'] as string, req.body));
   }
 
   public async findFirstByExample(req: Request, res: Response, next: NextFunction) {
     logger.debug('findFirstByExample %s %s', req.params['name'], JSON.stringify(req.body, null, 2));
     const db = this.getDatabase(req);
-    res.json(this.asObject(await db.findFirstByExample(req.params['name'], req.body)));
+    res.json(this.asObject(await db.findFirstByExample(req.params['name'] as string, req.body)));
   }
 
   public async findAllByExample(req: Request, res: Response, next: NextFunction) {
     logger.debug('findFirstByExample %s %s', req.params['name'], JSON.stringify(req.body, null, 2));
     const db = this.getDatabase(req);
-    res.json(await db.findAllByExample(req.params['name'], req.body));
+    res.json(await db.findAllByExample(req.params['name'] as string, req.body));
   }
 
   public async listAll(req: Request, res: Response, next: NextFunction) {
     logger.debug('listAll %s', req.params['name']);
     const db = this.getDatabase(req);
-    res.json(await db.getAll(req.params['name']));
+    res.json(await db.getAll(req.params['name'] as string));
   }
 
   public async saveDB(req: Request, res: Response, next: NextFunction) {

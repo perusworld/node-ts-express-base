@@ -1,9 +1,9 @@
 {
   "name": "node-ts-express-base",
-  "version": "9.3.0",
+  "version": "9.4.0",
   "description": "Node.js TypeScript Express - Prototype Backend for Demos & Rapid Prototyping",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "webpack",
     "start": "node ./bin/www",
     "start:build": "webpack --watch",
@@ -14,11 +14,19 @@
     "lint": "npm run format:check"
   },
   "jest": {
-    "globals": {},
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
     "transform": {
       "^.+\\.(ts|tsx|js|html)$": [
         "ts-jest",
         {
+          "useESM": true,
           "tsconfig": "tsconfig.json"
         }
       ]
@@ -56,36 +64,36 @@
   },
   "homepage": "https://github.com/perusworld/node-ts-express-base",
   "dependencies": {
-    "body-parser": "^2.2.1",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^5.2.0",
-    "luxon": "^3.7.1",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "luxon": "^3.7.2",
     "pug": "^3.0.3",
-    "socket.io": "^4.8.1",
-    "uuid": "^11.1.0",
-    "winston": "^3.17.0"
+    "socket.io": "^4.8.3",
+    "uuid": "^13.0.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.1",
-    "@types/node": "^24.2.1",
+    "@types/node": "^25.1.0",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
-    "concurrently": "^9.2.0",
+    "concurrently": "^9.2.1",
     "install": "^0.13.0",
-    "jest": "^30.0.5",
-    "nodemon": "^3.1.10",
-    "npm": "^11.5.2",
-    "prettier": "^3.5.3",
-    "supertest": "^7.1.4",
-    "ts-jest": "^29.4.1",
-    "ts-loader": "^9.5.2",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "npm": "^11.8.0",
+    "prettier": "^3.8.1",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
+    "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2",
-    "webpack": "^5.101.0",
+    "typescript": "^5.9.3",
+    "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
     "webpack-node-externals": "^3.0.0"
   }

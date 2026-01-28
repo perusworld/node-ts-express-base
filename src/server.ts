@@ -1,6 +1,7 @@
 import express from 'express';
 import * as path from 'path';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 
 import { APIRoute } from './api';
 import { ControllerRoute } from './controller';
@@ -14,6 +15,28 @@ import { IPRestrictionMiddleware } from './middleware/ip.restriction';
 import { SessionDatabaseMiddleware } from './middleware/session-database';
 import { DatabaseFactory } from './db-factory';
 import { TaskAPIRoute, TaskManager, TaskExecutionService, TaskCleanupService, TaskDemoAPI } from './task';
+
+// ESM-safe __dirname - works in both ESM (tests) and CommonJS (webpack bundle)
+// In ESM: use import.meta.url
+// In CommonJS: webpack replaces __dirname with the output directory path
+const __dirname: string = (() => {
+  // Try ESM first (tests) - import.meta.url exists
+  // @ts-ignore - import.meta only exists in ESM
+  if (typeof import.meta !== 'undefined' && typeof import.meta.url === 'string') {
+    // @ts-ignore - import.meta only exists in ESM
+    return path.dirname(fileURLToPath(import.meta.url));
+  }
+  // CommonJS mode (production webpack bundle)
+  // Webpack will replace __dirname - reference it via eval so webpack can process it
+  // @ts-ignore - __dirname is provided by webpack in CommonJS bundle
+  try {
+    // @ts-ignore
+    return eval('__dirname');
+  } catch {
+    // Fallback
+    return path.resolve('.');
+  }
+})();
 
 /**
  * The server.

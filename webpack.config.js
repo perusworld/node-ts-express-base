@@ -22,5 +22,9 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'commonjs2',
   },
+  node: {
+    __dirname: true, // Preserve __dirname in output
+    __filename: true, // Preserve __filename in output
+  },
   mode: 'development',
 };

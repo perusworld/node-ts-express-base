@@ -99,7 +99,7 @@ export class TaskAPIRoute {
    */
   public async getTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const task = await this.taskManager.getTask(req, taskId);
 
       if (!task) {
@@ -128,7 +128,7 @@ export class TaskAPIRoute {
    */
   public async startTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const sessionKey = req.sessionKey!;
 
       // Check if task exists and belongs to current session
@@ -172,7 +172,7 @@ export class TaskAPIRoute {
    */
   public async cancelTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const sessionKey = req.sessionKey!;
 
       // Try to cancel running task first
@@ -208,7 +208,7 @@ export class TaskAPIRoute {
    */
   public async retryTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const task = await this.taskManager.retryTask(req, taskId);
 
       if (!task) {
@@ -238,7 +238,7 @@ export class TaskAPIRoute {
    */
   public async getTaskStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const task = await this.taskManager.getTask(req, taskId);
 
       if (!task) {

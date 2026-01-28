@@ -1,4 +1,5 @@
 // Jest setup file for handling async operations and cleanup
+import { jest } from '@jest/globals';
 
 // Increase timeout for all tests
 jest.setTimeout(10000);

@@ -205,7 +205,7 @@ export class TaskDemoAPI {
    */
   public async executeTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const sessionKey = req.sessionKey!;
 
       // Get the task to determine its type
@@ -273,7 +273,7 @@ export class TaskDemoAPI {
    */
   public async getTaskResult(req: Request, res: Response, next: NextFunction) {
     try {
-      const taskId = req.params.id;
+      const taskId = req.params.id as string;
       const task = await this.taskManager.getTask(req, taskId);
 
       if (!task) {
