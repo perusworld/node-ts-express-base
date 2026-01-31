@@ -5,8 +5,7 @@ const fs = require('fs');
 
 // Load environment variables - use ENV_FILE path if set, otherwise .env
 const envPath = process.env.ENV_FILE || '.env';
-//print contents of env file
-console.log('Loading environment variables from', envPath, fs.readFileSync(envPath, 'utf8'));
+console.log('Loading environment variables from', envPath);
 require('dotenv').config({ path: envPath });
 
 // Module dependencies

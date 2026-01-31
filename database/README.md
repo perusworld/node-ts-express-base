@@ -33,3 +33,5 @@ The database system is **NOT a production database**. It's designed for:
 ## Usage
 
 The database automatically initializes when the server starts. Each session gets its own isolated data space, making it perfect for demonstrating multi-tenant capabilities without real database infrastructure.
+
+**Optional:** When `STORAGE=prisma`, User and Job data are stored in PostgreSQL via Prisma instead of in-memory. Session-scoped CMS data remains in-memory. See the main [README.md](../README.md) for configuration.

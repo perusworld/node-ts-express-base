@@ -15,6 +15,15 @@ import { IPRestrictionMiddleware } from './middleware/ip.restriction';
 import { SessionDatabaseMiddleware } from './middleware/session-database';
 import { DatabaseFactory } from './db-factory';
 import { TaskAPIRoute, TaskManager, TaskExecutionService, TaskCleanupService, TaskDemoAPI } from './task';
+import { createContainer } from './config/container';
+import type { AppContainer } from './core/types';
+import { features } from './config/features';
+import { createAuthModeMiddleware } from './middleware/auth-mode.middleware';
+import { startEmailWorker } from './infrastructure/workers/email.worker';
+import { startTrackableJobWorker } from './infrastructure/workers/trackable-job.worker';
+import { buildUserRoutes } from './routes/user.routes';
+import { buildJobRoutes } from './routes/job.routes';
+import type { Worker } from 'bullmq';
 
 // ESM-safe __dirname - works in both ESM (tests) and CommonJS (webpack bundle)
 // In ESM: use import.meta.url
@@ -52,12 +61,19 @@ export class Server {
   private sessionMiddleware?: SessionDatabaseMiddleware;
   private cfg = {} as any;
 
+  // DI container (userRepository, authService, jobRepository when STORAGE=prisma)
+  private container: AppContainer;
+
   // Task system components
   private taskManager?: TaskManager;
   private taskExecutionService?: TaskExecutionService;
   private taskCleanupService?: TaskCleanupService;
   private taskAPIRoute?: TaskAPIRoute;
   private taskDemoAPI?: TaskDemoAPI;
+
+  // BullMQ workers (when ENABLE_QUEUE=true)
+  private emailWorker?: Worker;
+  private trackableJobWorker?: Worker;
 
   /**
    * Bootstrap the application.
@@ -86,12 +102,25 @@ export class Server {
     this.db = new InMemoryDatabase(this.cfg.database);
 
     // Initialize session database if enabled
-    if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
+    if (features.useSessionIsolation) {
       this.initializeSessionDatabase();
     }
 
+    // Initialize DI container (repository pattern for User / auth)
+    this.container = createContainer();
+
     // Initialize task system
     this.initializeTaskSystem();
+
+    // Start BullMQ workers when queue is enabled
+    if (features.useQueue) {
+      this.emailWorker = startEmailWorker();
+      console.log('BullMQ email worker started');
+      if (features.usePrisma) {
+        this.trackableJobWorker = startTrackableJobWorker();
+        console.log('Trackable job worker started');
+      }
+    }
   }
 
   /**
@@ -194,6 +223,13 @@ export class Server {
         this.dbFactory.cleanupExpiredSessions();
       }
 
+      if (this.emailWorker) {
+        await this.emailWorker.close();
+      }
+      if (this.trackableJobWorker) {
+        await this.trackableJobWorker.close();
+      }
+
       // Wait for any pending operations to complete
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -239,10 +275,26 @@ export class Server {
    */
   public api() {
     let router = express.Router();
+
+    // When AUTH_MODE=full, CMS/task/session routes require JWT and scope by user id
+    router.use(createAuthModeMiddleware(this.dbFactory));
+
     let apiRoutes = new APIRoute(this);
     apiRoutes.buildRoutes(router);
     let cmsRoutes = new CMSRoute(this.db);
     cmsRoutes.buildRoutes(router);
+
+    // User auth and config routes
+    const userRouter = express.Router();
+    buildUserRoutes(userRouter);
+    router.use('/users', userRouter);
+
+    // Job routes – only when jobRepository is available (STORAGE=prisma)
+    if (this.container.jobRepository) {
+      const jobRouter = express.Router();
+      buildJobRoutes(jobRouter);
+      router.use('/jobs', jobRouter);
+    }
 
     // Add task routes if task system is initialized
     if (this.taskAPIRoute) {
@@ -272,6 +324,12 @@ export class Server {
     if (this.sessionMiddleware) {
       this.app.use(this.sessionMiddleware.middleware());
     }
+
+    // Attach DI container to request for routes (e.g. req.container.userRepository)
+    this.app.use((req, _res, next) => {
+      req.container = this.container;
+      next();
+    });
 
     this.app.use(
       cors({

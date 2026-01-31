@@ -15,6 +15,7 @@ A sophisticated Node.js TypeScript Express prototype backend designed for **rapi
 - [📚 Development & Testing](#-development--testing)
 - [🐳 Docker Deployment](#-docker-deployment)
 - [📖 Advanced Topics](#-advanced-topics)
+- [🔌 Storage & Production Options](#-storage--production-options)
 - [📄 License](#-license)
 
 ## 🎯 **Perfect For**
@@ -39,22 +40,31 @@ A sophisticated Node.js TypeScript Express prototype backend designed for **rapi
 - **Testing** - Jest testing framework setup for development validation
 - **Webpack** - Asset bundling and development tools
 
+**Optional production-oriented features** (opt-in via environment variables):
+
+- **PostgreSQL + Prisma** - Persistent User and Job storage when `STORAGE=prisma`
+- **Redis + BullMQ** - Real background job queue when `ENABLE_QUEUE=true`
+- **JWT Auth** - User registration, login, and token-based auth for `AUTH_MODE=full`
+- **Job API** - Persistent trackable jobs at `/api/v1/jobs` (requires Prisma + queue)
+
 ## ⚠️ **Important: Prototype/Demo Purpose**
 
-**This is NOT a production-ready system.** It's designed for:
+**By default, this is a prototype system** designed for:
 
 - **Rapid prototyping** and concept validation
 - **Client demonstrations** without infrastructure setup
 - **Development iterations** and feature testing
 - **Sales presentations** showing system capabilities
 
-**Production limitations:**
+**Default limitations** (when `STORAGE` is unset or `memory`):
 
 - All data is stored in-memory (lost on server restart)
 - No database persistence or redundancy
 - No horizontal scaling capabilities
 - No failover or disaster recovery
 - Single-server architecture
+
+**Optional production features:** When you need persistence and real background jobs, you can enable `STORAGE=prisma`, `ENABLE_QUEUE=true`, and `AUTH_MODE=full`. See [Storage & Production Options](#-storage--production-options).
 
 ## 🏃‍♂️ **Quick Start**
 
@@ -120,6 +130,38 @@ ENABLE_SESSION_ISOLATION=true
 AUTO_MAP_SESSION_BY_IP=true
 ```
 
+### Storage & Production Options
+
+Optional environment variables for persistent storage and production-style features:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STORAGE` | `memory` | `memory` = in-memory only; `prisma` = PostgreSQL via Prisma |
+| `DATABASE_URL` | — | Required when `STORAGE=prisma`. PostgreSQL connection string |
+| `REDIS_URL` | — | Redis URL for BullMQ (when `ENABLE_QUEUE=true`) |
+| `ENABLE_QUEUE` | `false` | `true` = enable BullMQ (email worker, trackable-job worker) |
+| `JWT_SECRET` | — | Secret for JWT signing. Generate with `openssl rand -hex 32` |
+| `JWT_EXPIRATION` | `1h` | JWT token expiry |
+| `AUTH_MODE` | `prototype` | `prototype` = IP/session isolation; `full` = JWT required for CMS/task/session routes |
+
+**Quick start with PostgreSQL + Redis:**
+
+```bash
+# Start Postgres and Redis
+docker compose -f docker-compose-db.yml up -d
+
+# Run migrations
+npx prisma migrate dev --name init
+
+# Set in .env
+STORAGE=prisma
+DATABASE_URL=postgresql://user:pass@localhost:5432/stayledger?schema=public
+REDIS_URL=redis://localhost:6379
+ENABLE_QUEUE=true
+JWT_SECRET=your_secret_here
+AUTH_MODE=full   # or prototype for demos
+```
+
 ### Advanced Configuration
 
 For complete configuration options, see:
@@ -161,12 +203,19 @@ The real value is in how it handles **demo scenarios**:
 - Professional-looking API structure
 - Session management and security features
 
-### **❌ What You Don't Get (Production Limitations)**
+### **✅ What You Get (Optional, when using production options)**
 
-- Persistent data storage
+When `STORAGE=prisma` and `ENABLE_QUEUE=true`:
+
+- **Persistent data storage** - User and Job data in PostgreSQL
+- **User auth API** - Register, login, JWT tokens at `/api/v1/users`
+- **Job API** - Create, list, and track jobs at `/api/v1/jobs`
+- **Background workers** - Email worker, trackable-job worker via BullMQ
+
+### **❌ What You Don't Get (Even with production options)**
+
 - Database redundancy or failover
 - Horizontal scaling capabilities
-- Production-grade security
 - Monitoring and alerting
 - Backup and disaster recovery
 
@@ -203,14 +252,19 @@ The real value is in how it handles **demo scenarios**:
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build the project with Webpack
 - `npm start` - Start production server
-- `npm test` - Run tests
+- `npm test` - Run tests (in-memory only; integration tests excluded)
+- `npm run test:integration` - Run integration tests (Prisma + Redis; requires `docker compose -f docker-compose-db.yml up -d`)
 - `npm run start:watch` - Start with nodemon for development
 - `npm run start:build` - Start Webpack in watch mode
 
 ### Testing
 
+- **Default (in-memory):** `npm test` — runs all tests except `test/integration/`. No Postgres or Redis required.
+- **Integration (Prisma + Redis):** `npm run test:integration` — runs only `test/integration/` (auth API, etc.). Requires Postgres and Redis; start them with `docker compose -f docker-compose-db.yml up -d` first.
+
 ```bash
 npm test
+npm run test:integration   # after starting docker-compose-db.yml
 ```
 
 ### Getting Started with Demos
@@ -316,6 +370,41 @@ For detailed information, see:
 
 - **[SESSION_ISOLATION.md](SESSION_ISOLATION.md)** - Complete guide to session isolation
 - **[TASK_SYSTEM_GUIDE.md](TASK_SYSTEM_GUIDE.md)** - Comprehensive task system documentation
+
+## 🔌 **Storage & Production Options**
+
+When you need persistence and production-style features, enable the optional stack:
+
+### User Auth API
+
+Base path: `/api/v1/users`. User routes are always mounted; register/login do not require auth.
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST /api/v1/users/register` | — | Register with email and password; returns user + JWT |
+| `POST /api/v1/users/login` | — | Login; returns user + JWT |
+| `GET /api/v1/users/config` | JWT | Get user config |
+| `PUT /api/v1/users/config` | JWT | Update user config |
+
+### Job API
+
+Base path: `/api/v1/jobs`. **Only mounted when** `STORAGE=prisma` and `ENABLE_QUEUE=true`. All job routes require JWT.
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v1/jobs` | Create a job (type, arguments; admins can create system jobs with `system: true`) |
+| `POST /api/v1/jobs/start-dummy-job` | Create and enqueue a dummy job (configurable delay) |
+| `GET /api/v1/jobs` | List jobs (user-scoped; admins see all) |
+| `GET /api/v1/jobs/:id` | Get job by ID |
+
+**Admin users:** Set `role='admin'` in the User table to list all jobs and create system jobs (`userId=null`).
+
+### Modes at a Glance
+
+| Mode | `STORAGE` | `AUTH_MODE` | `ENABLE_QUEUE` | Use case |
+|------|-----------|-------------|----------------|----------|
+| **Prototype** | `memory` | `prototype` | `false` | Demos, POCs, no infra |
+| **Production** | `prisma` | `full` | `true` | Persistent users, jobs, JWT auth |
 
 ## 📄 **License**
 

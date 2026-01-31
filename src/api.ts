@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { getLogger } from './util';
 import { v4 as uuidv4 } from 'uuid';
+import { features } from './config/features';
 
 const logger = getLogger('APIRoute');
 
@@ -37,12 +38,12 @@ export class APIRoute {
     router.get('/health', this.health.bind(this));
 
     // Session management endpoints (only available when session isolation is enabled)
-    if (process.env.ENABLE_SESSION_ISOLATION === 'true') {
+    if (features.useSessionIsolation) {
       router.get('/sessions/stats', this.getSessionStats.bind(this));
       router.get('/sessions/cleanup', this.cleanupSessions.bind(this));
 
       // IP-session mapping endpoints (only available when auto-mapping is enabled)
-      if (process.env.AUTO_MAP_SESSION_BY_IP === 'true') {
+      if (features.useAutoMapSessionByIP) {
         router.get('/sessions/ip-mappings', this.getIPSessionMappings.bind(this));
         router.delete('/sessions/ip-mappings', this.clearIPSessionMappings.bind(this));
       }

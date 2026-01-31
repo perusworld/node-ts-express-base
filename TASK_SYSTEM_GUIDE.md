@@ -6,6 +6,18 @@ The Async Task System is designed for **prototyping and demonstrating background
 
 **Note: This is a prototype system using in-memory storage. Tasks are lost on server restart.**
 
+### Task System vs. Job API
+
+| Feature | Task System (`/api/v1/tasks`) | Job API (`/api/v1/jobs`) |
+|---------|------------------------------|---------------------------|
+| Storage | In-memory, session-scoped | PostgreSQL (when `STORAGE=prisma`) |
+| Persistence | Lost on restart | Persistent |
+| Requires | `ENABLE_SESSION_ISOLATION=true` | `STORAGE=prisma` + `ENABLE_QUEUE=true` |
+| Auth | Session/IP-based | JWT required |
+| Use case | Demos, workflow demonstrations | Production background jobs |
+
+Use the **Task System** for demos and POCs. Use the **Job API** when you need persistent, trackable jobs in production.
+
 ## Prerequisites
 
 Make sure you have session isolation enabled in your `.env` file:
@@ -380,5 +392,6 @@ Watch your server console for task execution logs:
 2. **Add Real-time Updates**: Consider WebSocket integration
 3. **Monitor Performance**: Adjust cleanup intervals and retention policies
 4. **Scale Up**: The system handles multiple concurrent tasks per session
+5. **Need persistent jobs?** Use the Job API (`/api/v1/jobs`) with `STORAGE=prisma` and `ENABLE_QUEUE=true` — see [README.md](README.md#-storage--production-options)
 
-The async task system is now ready for production use! 🎉
+The async task system is now ready for demos and prototyping! 🎉

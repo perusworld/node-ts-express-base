@@ -4,19 +4,20 @@ This feature provides **in-memory isolated database instances per app session** 
 
 ## ⚠️ **Important: Prototype/Demo Purpose**
 
-**This is NOT a production multi-tenant system.** It's designed for:
+**Session isolation provides in-memory, per-session data.** It's designed for:
 
 - **Client demonstrations** showing multi-tenant architecture
 - **Sales presentations** without database setup complexity
 - **Prototyping** multi-tenant features quickly
 - **Development testing** of session-based logic
 
-**Production limitations:**
+**Session isolation limitations:**
 
-- All data is stored in-memory (lost on server restart)
-- No persistent storage or backup
-- No database clustering or replication
+- CMS data per session is in-memory (lost on server restart)
+- No persistent storage or backup for session-scoped CMS data
 - Limited to single server instance
+
+**Note:** User and Job data (when `STORAGE=prisma`) are stored in PostgreSQL and are persistent. Session isolation applies to the CMS endpoints and in-memory task system.
 
 ## Overview
 
@@ -30,6 +31,10 @@ When enabled, each request can specify a session key that determines which in-me
 - Client workshops with working examples
 
 ## Configuration
+
+### Auth Mode and Session Routes
+
+When `AUTH_MODE=full`, CMS, task, and session routes require a valid JWT. The session key is then derived from the authenticated user's ID (`req.user.id`), not from IP or headers. Use `AUTH_MODE=prototype` for demos where IP/session headers determine isolation.
 
 ### Environment Variables
 
@@ -53,6 +58,9 @@ DEFAULT_SESSION=default
 # Auto-mapping Session Keys by IP (Optional)
 AUTO_MAP_SESSION_BY_IP=true
 IP_SESSION_PREFIX=ip_
+
+# Auth mode: prototype = session from IP/header; full = JWT required, session from user id
+AUTH_MODE=prototype
 ```
 
 ### Complete Example .env Configuration
@@ -71,6 +79,9 @@ DEFAULT_SESSION=default
 # Auto-mapping Session Keys by IP (Optional)
 AUTO_MAP_SESSION_BY_IP=true
 IP_SESSION_PREFIX=ip_
+
+# Auth mode (when using JWT auth)
+AUTH_MODE=prototype
 ```
 
 ## Usage
@@ -101,6 +112,8 @@ If no session key is provided, the `DEFAULT_SESSION` value is used.
 
 When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are set, the application will automatically generate session keys based on client IP addresses when no explicit session key is provided in the request.
 
+**In prisma mode (`STORAGE=prisma`):** Session isolation and IP-based mapping still apply to CMS and session-scoped data (the session middleware runs regardless of `STORAGE`). When you also use `AUTH_MODE=full`, CMS/task/session routes use the **authenticated user's id** as the session key instead of the IP—so for those scoped routes the session key comes from the JWT, not from IP mapping. IP mapping is still used for unauthenticated requests and for non-scoped routes.
+
 **Perfect for demo scenarios** where you want each client to see their own isolated data without manual session management.
 
 #### How it works:
@@ -121,13 +134,13 @@ When both `ENABLE_SESSION_ISOLATION=true` and `AUTO_MAP_SESSION_BY_IP=true` are 
 
 ## API Endpoints
 
-### Session Management (when enabled)
+### Session Management (when ENABLE_SESSION_ISOLATION=true)
 
 - `GET /api/v1/sessions/stats` - Get session statistics
 - `GET /api/v1/sessions/cleanup` - Cleanup expired sessions
 - `DELETE /api/v1/sessions/:sessionKey` - Remove specific session
 
-### IP-Based Session Mapping
+### IP-Based Session Mapping (when ENABLE_SESSION_ISOLATION=true and AUTO_MAP_SESSION_BY_IP=true)
 
 - `GET /api/v1/sessions/ip-mappings` - Get IP-session mapping statistics
 - `DELETE /api/v1/sessions/ip-mappings` - Clear all IP-session mappings
