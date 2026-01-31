@@ -104,6 +104,17 @@ npm start
 
 This project uses [dotenv](https://github.com/motdotla/dotenv) for environment variable management. Copy `env.example` to `.env` and configure the following variables:
 
+### Preset configs (prototype vs production)
+
+One-command config for prototype or production (combined approach):
+
+| Script | Effect |
+|--------|--------|
+| `npm run env:prototype` | Copies `env.prototype` to `.env` (in-memory, no Postgres/Redis) |
+| `npm run env:production` | Copies `env.production` to `.env` (then set `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`) |
+
+Then run `npm run dev` or `npm start` as usual. For a **prototype-only build** (smaller bundle, no Prisma/BullMQ in the artifact): `npm run build:prototype` then `npm run start:prototype` (uses `env.prototype` by default).
+
 ### Essential Configuration
 
 ```bash
@@ -147,15 +158,15 @@ Optional environment variables for persistent storage and production-style featu
 **Quick start with PostgreSQL + Redis:**
 
 ```bash
-# Start Postgres and Redis
-docker compose -f docker-compose-db.yml up -d
+# Start Postgres and Redis (project name: nteb; use -d to run in background)
+docker compose -p nteb -f docker-compose-db.yml up
 
 # Run migrations
 npx prisma migrate dev --name init
 
 # Set in .env
 STORAGE=prisma
-DATABASE_URL=postgresql://user:pass@localhost:5432/stayledger?schema=public
+DATABASE_URL=postgresql://user:pass@localhost:5432/nteb?schema=public
 REDIS_URL=redis://localhost:6379
 ENABLE_QUEUE=true
 JWT_SECRET=your_secret_here
@@ -250,21 +261,46 @@ When `STORAGE=prisma` and `ENABLE_QUEUE=true`:
 ### Available Scripts
 
 - `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the project with Webpack
-- `npm start` - Start production server
+- `npm run build` - Build the project with Webpack (full server)
+- `npm run build:prototype` - Build prototype-only bundle (no Prisma/BullMQ in bundle)
+- `npm start` - Start production server (full)
+- `npm run start:prototype` - Start prototype server (uses `env.prototype`; run `build:prototype` first)
+- `npm run env:prototype` - Copy `env.prototype` to `.env`
+- `npm run env:production` - Copy `env.production` to `.env`
 - `npm test` - Run tests (in-memory only; integration tests excluded)
-- `npm run test:integration` - Run integration tests (Prisma + Redis; requires `docker compose -f docker-compose-db.yml up -d`)
+- `npm run test:integration` - Run integration tests (Prisma + Redis; requires `docker compose -p nteb -f docker-compose-db.yml up` and migrations)
 - `npm run start:watch` - Start with nodemon for development
 - `npm run start:build` - Start Webpack in watch mode
 
 ### Testing
 
-- **Default (in-memory):** `npm test` — runs all tests except `test/integration/`. No Postgres or Redis required.
-- **Integration (Prisma + Redis):** `npm run test:integration` — runs only `test/integration/` (auth API, etc.). Requires Postgres and Redis; start them with `docker compose -f docker-compose-db.yml up -d` first.
+Tests respect the combined approach (prototype vs production):
+
+- **Unit tests (prototype mode):** `npm test` — runs all tests except `test/integration/`. Uses `STORAGE=memory` and `ENABLE_QUEUE=false` so no Postgres or Redis is required, regardless of your `.env`. Safe to run anytime.
+- **Integration tests (production mode):** `npm run test:integration` — runs only `test/integration/` (auth API, jobs API, AUTH_MODE=full). Uses `STORAGE=prisma`, `ENABLE_QUEUE=true`, `AUTH_MODE=full`. Requires Postgres and Redis running **and** migrations applied.
+
+**Run integration tests:**
 
 ```bash
-npm test
-npm run test:integration   # after starting docker-compose-db.yml
+# 1. Start Postgres + Redis (project name: nteb; use -d to run in background)
+docker compose -p nteb -f docker-compose-db.yml up
+
+# 2. Apply migrations (first time or after schema changes)
+npx prisma migrate deploy
+
+# 3. Run integration tests
+npm run test:integration
+```
+
+**Stop DB and remove volumes:**
+
+```bash
+docker compose -p nteb -f docker-compose-db.yml down -v
+```
+
+```bash
+npm test                    # unit tests only, prototype mode, no DB
+npm run test:integration    # integration tests, production mode, after DB + migrate
 ```
 
 ### Getting Started with Demos

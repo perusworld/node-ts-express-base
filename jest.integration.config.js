@@ -1,4 +1,4 @@
-/** Jest config for integration tests only. Requires docker-compose-db.yml (Postgres + Redis). */
+/** Jest config for integration tests only. Requires Postgres + Redis (e.g. docker compose -p nteb -f docker-compose-db.yml up) and npx prisma migrate deploy. */
 module.exports = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',

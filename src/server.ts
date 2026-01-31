@@ -17,12 +17,13 @@ import { DatabaseFactory } from './db-factory';
 import { TaskAPIRoute, TaskManager, TaskExecutionService, TaskCleanupService, TaskDemoAPI } from './task';
 import { createContainer } from './config/container';
 import type { AppContainer } from './core/types';
-import { features } from './config/features';
 import { createAuthModeMiddleware } from './middleware/auth-mode.middleware';
 import { startEmailWorker } from './infrastructure/workers/email.worker';
 import { startTrackableJobWorker } from './infrastructure/workers/trackable-job.worker';
 import { buildUserRoutes } from './routes/user.routes';
 import { buildJobRoutes } from './routes/job.routes';
+import { buildSessionRoutes, buildIPMappingRoutes } from './prototype/session-routes';
+import { features } from './config/features';
 import type { Worker } from 'bullmq';
 
 // ESM-safe __dirname - works in both ESM (tests) and CommonJS (webpack bundle)
@@ -58,7 +59,7 @@ export class Server {
   private utl: UtilService;
   private db: Database;
   private dbFactory?: DatabaseFactory;
-  private sessionMiddleware?: SessionDatabaseMiddleware;
+  public sessionMiddleware?: SessionDatabaseMiddleware;
   private cfg = {} as any;
 
   // DI container (userRepository, authService, jobRepository when STORAGE=prisma)
@@ -279,9 +280,18 @@ export class Server {
     // When AUTH_MODE=full, CMS/task/session routes require JWT and scope by user id
     router.use(createAuthModeMiddleware(this.dbFactory));
 
-    let apiRoutes = new APIRoute(this);
+    const apiRoutes = new APIRoute();
     apiRoutes.buildRoutes(router);
-    let cmsRoutes = new CMSRoute(this.db);
+
+    // Prototype-only: session isolation routes (ip-mappings before :sessionKey so DELETE /sessions/ip-mappings is matched)
+    if (features.useSessionIsolation) {
+      if (features.useAutoMapSessionByIP) {
+        buildIPMappingRoutes(router, this);
+      }
+      buildSessionRoutes(router, this);
+    }
+
+    const cmsRoutes = new CMSRoute(this.db);
     cmsRoutes.buildRoutes(router);
 
     // User auth and config routes

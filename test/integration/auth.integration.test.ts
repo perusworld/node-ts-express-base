@@ -1,7 +1,7 @@
 /**
  * Integration tests for auth: register, login, config, JWT.
  * Run with: npm run test:integration
- * Requires: docker compose -f docker-compose-db.yml up -d (Postgres + Redis)
+ * Requires: docker compose -p nteb -f docker-compose-db.yml up (Postgres + Redis), then npx prisma migrate deploy
  * Uses STORAGE=prisma, DATABASE_URL, JWT_SECRET from the test:integration script.
  */
 import jwt from 'jsonwebtoken';

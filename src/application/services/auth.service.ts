@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { IUserRepository, User, UserPublic } from '../../core/types';
 import { features } from '../../config/features';
-import { scheduleWelcomeEmail } from '../../infrastructure/queue/queue';
 
 function toPublic(user: User): UserPublic {
   const { password: _p, ...rest } = user;
@@ -24,9 +23,13 @@ export class AuthServiceImpl {
     });
 
     if (features.useQueue) {
-      scheduleWelcomeEmail(user.id, user.email).catch(err =>
-        console.error('Failed to schedule welcome email:', err)
-      );
+      import('../../infrastructure/queue/queue')
+        .then(({ scheduleWelcomeEmail }) =>
+          scheduleWelcomeEmail(user.id, user.email).catch(err =>
+            console.error('Failed to schedule welcome email:', err)
+          )
+        )
+        .catch(() => {});
     }
 
     const token = this.generateToken(user.id);

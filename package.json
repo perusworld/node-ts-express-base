@@ -1,15 +1,19 @@
 {
   "name": "node-ts-express-base",
-  "version": "10.0.0",
+  "version": "11.0.0",
   "description": "Node.js TypeScript Express - Prototype Backend for Demos & Rapid Prototyping",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules STORAGE=prisma DATABASE_URL=postgresql://user:pass@localhost:5432/stayledger?schema=public REDIS_URL=redis://localhost:6379 ENABLE_QUEUE=true JWT_SECRET=test-secret-for-integration-only jest -c jest.integration.config.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules STORAGE=memory ENABLE_QUEUE=false jest",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules STORAGE=prisma DATABASE_URL=postgresql://user:pass@localhost:5432/nteb?schema=public REDIS_URL=redis://localhost:6379 ENABLE_QUEUE=true AUTH_MODE=full JWT_SECRET=test-secret-for-integration-only jest -c jest.integration.config.js",
     "build": "webpack",
+    "build:prototype": "webpack --config webpack.prototype.config.js",
     "start": "node ./bin/www",
+    "start:prototype": "ENV_FILE=env.prototype node ./bin/www-prototype",
     "start:build": "webpack --watch",
     "start:watch": "nodemon",
     "dev": "concurrently npm:start:*",
+    "env:prototype": "cp env.prototype .env",
+    "env:production": "cp env.production .env",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run format:check"

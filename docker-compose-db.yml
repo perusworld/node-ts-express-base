@@ -1,6 +1,7 @@
 # Postgres + Redis for STORAGE=prisma and BullMQ.
-# Usage: docker compose -f docker-compose-db.yml up -d
-# Then set DATABASE_URL (and REDIS_URL if using queue) in .env and run migrations.
+# Usage: docker compose -p nteb -f docker-compose-db.yml up   (use -d to run in background)
+# Stop and remove volumes: docker compose -p nteb -f docker-compose-db.yml down -v
+# Then set DATABASE_URL (and REDIS_URL if using queue) in .env and run: npx prisma migrate deploy
 services:
   postgres:
     image: postgres:18-alpine
@@ -8,13 +9,13 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: stayledger
+      POSTGRES_DB: nteb
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d stayledger"]
+      test: ["CMD-SHELL", "pg_isready -U user -d nteb"]
       interval: 10s
       timeout: 5s
       retries: 5

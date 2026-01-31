@@ -1,8 +1,8 @@
 /**
  * Integration tests for AUTH_MODE=full: CMS/task/session routes require JWT.
  * Run with: npm run test:integration
- * Requires: ENABLE_SESSION_ISOLATION=true so session/dbFactory exists; AUTH_MODE=full set below.
- * Token-dependent tests also require Postgres (same as auth.integration.test): docker compose -f docker-compose-db.yml up -d
+ * Requires: ENABLE_SESSION_ISOLATION=true so session/dbFactory exists; AUTH_MODE=full set by test:integration script.
+ * Token-dependent tests also require Postgres (same as auth.integration.test): docker compose -p nteb -f docker-compose-db.yml up, then npx prisma migrate deploy
  */
 process.env.AUTH_MODE = 'full';
 process.env.ENABLE_SESSION_ISOLATION = 'true';
@@ -65,7 +65,7 @@ describe('AUTH_MODE=full', () => {
         .set('Accept', 'application/json');
       if (res.status !== 201) {
         throw new Error(
-          `Register failed (${res.status}): ${JSON.stringify(res.body)}. Ensure Postgres is running (docker compose -f docker-compose-db.yml up -d).`
+          `Register failed (${res.status}): ${JSON.stringify(res.body)}. Ensure Postgres is running (docker compose -p nteb -f docker-compose-db.yml up) and migrations applied (npx prisma migrate deploy).`
         );
       }
       token = res.body.token;

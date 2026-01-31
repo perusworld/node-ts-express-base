@@ -10,7 +10,7 @@ require('dotenv').config({ path: envPath });
 const debug = require('debug')('express:server');
 const http = require('http');
 const { Server: SocketIOServer } = require('socket.io');
-const { Server } = require('../dist/bundle');
+const { Server } = require('../dist/bundle-prototype');
 
 // Server port and state
 const httpPort = normalizePort(process.env.PORT || 3000);
@@ -23,7 +23,7 @@ serverInstance
   .init()
   .then(done => {
     if (done) {
-      console.log('Server initialised.');
+      console.log('Server initialised (prototype mode).');
       const app = serverInstance.app;
       app.set('port', httpPort);
 

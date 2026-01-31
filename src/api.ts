@@ -1,55 +1,26 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { getLogger } from './util';
 import { v4 as uuidv4 } from 'uuid';
-import { features } from './config/features';
 
 const logger = getLogger('APIRoute');
 
 /**
- * @class APIRoute
- * @constructor
+ * Shared API routes: hello, health. Session routes live in prototype/session-routes.ts.
  */
 export class APIRoute {
-  private serverInstance?: any;
-
   /**
-   * Constructor
-   *
-   * @class APIRoute
-   * @constructor
+   * buildRoutes — mounts /hello and /health only.
    */
-  constructor(serverInstance?: any) {
-    this.serverInstance = serverInstance;
-  }
-
-  /**
-   * buildRoutes
-   */
-  public buildRoutes(router: Router) {
+  public buildRoutes(router: Router): void {
     logger.debug('[APIRoute::create] Creating api route.');
 
     router.use((req: Request, res: Response, next: NextFunction) => {
-      //TODO: Your API Request Authentication Logic
       next();
     });
 
     router.get('/hello', this.helloGet.bind(this));
     router.post('/hello', this.helloPost.bind(this));
     router.get('/health', this.health.bind(this));
-
-    // Session management endpoints (only available when session isolation is enabled)
-    if (features.useSessionIsolation) {
-      router.get('/sessions/stats', this.getSessionStats.bind(this));
-      router.get('/sessions/cleanup', this.cleanupSessions.bind(this));
-
-      // IP-session mapping endpoints (only available when auto-mapping is enabled)
-      if (features.useAutoMapSessionByIP) {
-        router.get('/sessions/ip-mappings', this.getIPSessionMappings.bind(this));
-        router.delete('/sessions/ip-mappings', this.clearIPSessionMappings.bind(this));
-      }
-
-      router.delete('/sessions/:sessionKey', this.removeSession.bind(this));
-    }
   }
 
   /**
@@ -78,98 +49,11 @@ export class APIRoute {
   /**
    * Health check endpoint
    */
-  public health(req: Request, res: Response, next: NextFunction) {
+  public health(req: Request, res: Response, _next: NextFunction): void {
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       sessionKey: req.sessionKey || 'default',
     });
-  }
-
-  /**
-   * Get session statistics
-   */
-  public getSessionStats(req: Request, res: Response, next: NextFunction) {
-    if (this.serverInstance) {
-      const stats = this.serverInstance.getSessionStats();
-      res.json(stats);
-    } else {
-      res.json({
-        message: 'Session statistics endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default',
-      });
-    }
-  }
-
-  /**
-   * Cleanup expired sessions
-   */
-  public cleanupSessions(req: Request, res: Response, next: NextFunction) {
-    if (this.serverInstance) {
-      const cleanedCount = this.serverInstance.cleanupSessions();
-      res.json({
-        cleanedSessions: cleanedCount,
-        success: true,
-      });
-    } else {
-      res.json({
-        message: 'Session cleanup endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default',
-      });
-    }
-  }
-
-  /**
-   * Remove specific session
-   */
-  public removeSession(req: Request, res: Response, next: NextFunction) {
-    const sessionKey = req.params.sessionKey;
-
-    if (this.serverInstance) {
-      const removed = this.serverInstance.sessionMiddleware?.removeSession(sessionKey);
-      res.json({
-        sessionKey: sessionKey,
-        removed: removed,
-        success: true,
-      });
-    } else {
-      res.json({
-        message: `Remove session endpoint - server instance not available for session: ${sessionKey}`,
-        sessionKey: req.sessionKey || 'default',
-      });
-    }
-  }
-
-  /**
-   * Get IP-session mappings
-   */
-  public getIPSessionMappings(req: Request, res: Response, next: NextFunction) {
-    if (this.serverInstance) {
-      const mappings = this.serverInstance.sessionMiddleware?.getIPSessionStats();
-      res.json(mappings);
-    } else {
-      res.json({
-        message: 'IP-session mappings endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default',
-      });
-    }
-  }
-
-  /**
-   * Clear IP-session mappings
-   */
-  public clearIPSessionMappings(req: Request, res: Response, next: NextFunction) {
-    if (this.serverInstance) {
-      const clearedCount = this.serverInstance.sessionMiddleware?.clearIPSessionMappings();
-      res.json({
-        clearedMappings: clearedCount,
-        success: true,
-      });
-    } else {
-      res.json({
-        message: 'Clear IP-session mappings endpoint - server instance not available',
-        sessionKey: req.sessionKey || 'default',
-      });
-    }
   }
 }
