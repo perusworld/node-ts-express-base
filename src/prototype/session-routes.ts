@@ -27,7 +27,8 @@ export function buildSessionRoutes(router: Router, serverInstance: SessionRoutes
   });
 
   router.delete('/sessions/:sessionKey', (req: Request, res: Response) => {
-    const sessionKey = typeof req.params.sessionKey === 'string' ? req.params.sessionKey : req.params.sessionKey?.[0] ?? '';
+    const sessionKey =
+      typeof req.params.sessionKey === 'string' ? req.params.sessionKey : (req.params.sessionKey?.[0] ?? '');
     const removed = serverInstance.sessionMiddleware?.removeSession(sessionKey);
     res.json({ sessionKey, removed: removed ?? false, success: true });
   });

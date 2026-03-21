@@ -15,8 +15,7 @@ const app = serverInstance.app;
 beforeAll(() => serverInstance.init());
 afterAll(() => serverInstance.cleanup());
 
-const uniqueEmail = () =>
-  `jobs-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@test.local`;
+const uniqueEmail = () => `jobs-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@test.local`;
 const password = 'test-password-123';
 
 function auth(token: string) {
@@ -52,18 +51,11 @@ describe('Jobs API', () => {
     });
 
     test('GET /api/v1/jobs/:id without token returns 401', async () => {
-      await request(app)
-        .get('/api/v1/jobs/some-id')
-        .set('Accept', 'application/json')
-        .expect(401);
+      await request(app).get('/api/v1/jobs/some-id').set('Accept', 'application/json').expect(401);
     });
 
     test('POST /api/v1/jobs/start-dummy-job without token returns 401', async () => {
-      await request(app)
-        .post('/api/v1/jobs/start-dummy-job')
-        .send({})
-        .set('Accept', 'application/json')
-        .expect(401);
+      await request(app).post('/api/v1/jobs/start-dummy-job').send({}).set('Accept', 'application/json').expect(401);
     });
   });
 
@@ -118,11 +110,7 @@ describe('Jobs API', () => {
 
   describe('list jobs', () => {
     test('GET /api/v1/jobs returns 200 and user jobs only (non-admin)', async () => {
-      const res = await request(app)
-        .get('/api/v1/jobs')
-        .set('Accept', 'application/json')
-        .use(auth(token))
-        .expect(200);
+      const res = await request(app).get('/api/v1/jobs').set('Accept', 'application/json').use(auth(token)).expect(200);
       expect(res.body.jobs).toBeDefined();
       expect(Array.isArray(res.body.jobs)).toBe(true);
       res.body.jobs.forEach((j: { userId: string }) => {
@@ -228,11 +216,7 @@ describe('Jobs API', () => {
         .expect(201);
       const jobId = createRes.body.id;
 
-      await request(app)
-        .get(`/api/v1/jobs/${jobId}`)
-        .set('Accept', 'application/json')
-        .use(auth(token))
-        .expect(403);
+      await request(app).get(`/api/v1/jobs/${jobId}`).set('Accept', 'application/json').use(auth(token)).expect(403);
     });
   });
 });

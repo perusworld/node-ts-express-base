@@ -11,7 +11,7 @@ export class PrismaUserRepository implements IUserRepository {
       email: entity.email,
       password: entity.password,
       role: entity.role ?? undefined,
-      config: entity.config as Record<string, unknown> | undefined ?? undefined,
+      config: (entity.config as Record<string, unknown> | undefined) ?? undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

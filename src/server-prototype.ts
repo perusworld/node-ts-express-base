@@ -126,11 +126,7 @@ export class Server {
       cleanupInterval: parseInt(process.env.TASK_CLEANUP_INTERVAL || '300000'),
     });
 
-    this.taskAPIRoute = new TaskAPIRoute(
-      this.taskManager,
-      this.taskExecutionService,
-      this.taskCleanupService
-    );
+    this.taskAPIRoute = new TaskAPIRoute(this.taskManager, this.taskExecutionService, this.taskCleanupService);
     this.taskDemoAPI = new TaskDemoAPI(this.taskManager, this.taskExecutionService);
     this.taskCleanupService.start();
     console.log('Task system initialized successfully');

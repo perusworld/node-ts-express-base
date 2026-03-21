@@ -1,12 +1,7 @@
 /**
  * Unit tests for auth mode: getAuthMode, isFullAuthMode, isPrototypeAuthMode, isScopedPath.
  */
-import {
-  getAuthMode,
-  isFullAuthMode,
-  isPrototypeAuthMode,
-  isScopedPath,
-} from '../src/config/auth-mode';
+import { getAuthMode, isFullAuthMode, isPrototypeAuthMode, isScopedPath } from '../src/config/auth-mode';
 
 const originalAuthMode = process.env.AUTH_MODE;
 

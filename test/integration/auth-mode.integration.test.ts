@@ -16,41 +16,28 @@ const app = serverInstance.app;
 beforeAll(() => serverInstance.init());
 afterAll(() => serverInstance.cleanup());
 
-const uniqueEmail = () =>
-  `auth-mode-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@test.local`;
+const uniqueEmail = () => `auth-mode-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@test.local`;
 const password = 'test-password-123';
 
 describe('AUTH_MODE=full', () => {
   describe('scoped routes return 401 without JWT', () => {
     test('GET /api/v1/cms/:name without token returns 401', async () => {
-      const res = await request(app)
-        .get('/api/v1/cms/test-items')
-        .set('Accept', 'application/json')
-        .expect(401);
+      const res = await request(app).get('/api/v1/cms/test-items').set('Accept', 'application/json').expect(401);
       expect(res.body.error).toBeDefined();
     });
 
     test('GET /api/v1/tasks without token returns 401', async () => {
-      const res = await request(app)
-        .get('/api/v1/tasks')
-        .set('Accept', 'application/json')
-        .expect(401);
+      const res = await request(app).get('/api/v1/tasks').set('Accept', 'application/json').expect(401);
       expect(res.body.error).toBeDefined();
     });
 
     test('GET /api/v1/sessions/stats without token returns 401', async () => {
-      const res = await request(app)
-        .get('/api/v1/sessions/stats')
-        .set('Accept', 'application/json')
-        .expect(401);
+      const res = await request(app).get('/api/v1/sessions/stats').set('Accept', 'application/json').expect(401);
       expect(res.body.error).toBeDefined();
     });
 
     test('GET /api/v1/demo/tasks/:id/result without token returns 401', async () => {
-      await request(app)
-        .get('/api/v1/demo/tasks/some-id/result')
-        .set('Accept', 'application/json')
-        .expect(401);
+      await request(app).get('/api/v1/demo/tasks/some-id/result').set('Accept', 'application/json').expect(401);
     });
   });
 
@@ -102,17 +89,11 @@ describe('AUTH_MODE=full', () => {
 
   describe('non-scoped routes unchanged', () => {
     test('GET /api/v1/hello does not require token', async () => {
-      await request(app)
-        .get('/api/v1/hello')
-        .set('Accept', 'application/json')
-        .expect(200);
+      await request(app).get('/api/v1/hello').set('Accept', 'application/json').expect(200);
     });
 
     test('GET /api/v1/health does not require token', async () => {
-      await request(app)
-        .get('/api/v1/health')
-        .set('Accept', 'application/json')
-        .expect(200);
+      await request(app).get('/api/v1/health').set('Accept', 'application/json').expect(200);
     });
 
     test('POST /api/v1/users/register does not require token (no 401)', async () => {

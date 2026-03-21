@@ -32,7 +32,5 @@ const SCOPED_PATH_PREFIXES = ['/cms', '/sessions', '/tasks', '/demo/tasks'];
  * Used by auth-mode middleware to decide when to require JWT in full auth mode.
  */
 export function isScopedPath(path: string): boolean {
-  return SCOPED_PATH_PREFIXES.some(
-    prefix => path === prefix || path.startsWith(prefix + '/')
-  );
+  return SCOPED_PATH_PREFIXES.some(prefix => path === prefix || path.startsWith(prefix + '/'));
 }

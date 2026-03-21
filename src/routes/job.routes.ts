@@ -18,7 +18,11 @@ export function buildJobRoutes(router: Router): void {
       return;
     }
     const user = req.user!;
-    const { type, arguments: args, system } = req.body as {
+    const {
+      type,
+      arguments: args,
+      system,
+    } = req.body as {
       type?: string;
       arguments?: Record<string, unknown>;
       system?: boolean;

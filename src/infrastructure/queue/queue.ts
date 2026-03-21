@@ -57,11 +57,7 @@ export async function scheduleWelcomeEmail(userId: string, email: string): Promi
 export async function enqueueTrackableJob(jobId: string, type: string): Promise<void> {
   const queue = getMainQueue();
   if (!queue) return;
-  await queue.add(
-    TRACKABLE_JOB_NAME,
-    { jobId, type },
-    { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
-  );
+  await queue.add(TRACKABLE_JOB_NAME, { jobId, type }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
 }
 
 export { QUEUE_NAME };

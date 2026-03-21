@@ -78,11 +78,7 @@ export function startTrackableJobWorker(): Worker {
 }
 
 /** Dummy job: wait random seconds (from meta or 1–5), then complete with result. */
-async function handleDummyJob(
-  jobRepo: PrismaJobRepository,
-  jobId: string,
-  job: DomainJob
-): Promise<void> {
+async function handleDummyJob(jobRepo: PrismaJobRepository, jobId: string, job: DomainJob): Promise<void> {
   const meta = (job.meta ?? {}) as { delayMinSec?: number; delayMaxSec?: number };
   const minSec = meta.delayMinSec ?? 1;
   const maxSec = meta.delayMaxSec ?? 5;

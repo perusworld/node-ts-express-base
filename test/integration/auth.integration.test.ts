@@ -80,10 +80,7 @@ describe('Auth API (integration)', () => {
   });
 
   test('GET /api/v1/users/config without token returns 401', async () => {
-    await request(app)
-      .get('/api/v1/users/config')
-      .set('Accept', 'application/json')
-      .expect(401);
+    await request(app).get('/api/v1/users/config').set('Accept', 'application/json').expect(401);
   });
 
   test('GET /api/v1/users/config with invalid JWT returns 401', async () => {

@@ -8,13 +8,13 @@ The Async Task System is designed for **prototyping and demonstrating background
 
 ### Task System vs. Job API
 
-| Feature | Task System (`/api/v1/tasks`) | Job API (`/api/v1/jobs`) |
-|---------|------------------------------|---------------------------|
-| Storage | In-memory, session-scoped | PostgreSQL (when `STORAGE=prisma`) |
-| Persistence | Lost on restart | Persistent |
-| Requires | `ENABLE_SESSION_ISOLATION=true` | `STORAGE=prisma` + `ENABLE_QUEUE=true` |
-| Auth | Session/IP-based | JWT required |
-| Use case | Demos, workflow demonstrations | Production background jobs |
+| Feature     | Task System (`/api/v1/tasks`)   | Job API (`/api/v1/jobs`)               |
+| ----------- | ------------------------------- | -------------------------------------- |
+| Storage     | In-memory, session-scoped       | PostgreSQL (when `STORAGE=prisma`)     |
+| Persistence | Lost on restart                 | Persistent                             |
+| Requires    | `ENABLE_SESSION_ISOLATION=true` | `STORAGE=prisma` + `ENABLE_QUEUE=true` |
+| Auth        | Session/IP-based                | JWT required                           |
+| Use case    | Demos, workflow demonstrations  | Production background jobs             |
 
 Use the **Task System** for demos and POCs. Use the **Job API** when you need persistent, trackable jobs in production.
 

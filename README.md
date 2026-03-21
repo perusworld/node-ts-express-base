@@ -70,7 +70,7 @@ A sophisticated Node.js TypeScript Express prototype backend designed for **rapi
 
 ### Prerequisites
 
-- Node.js (v22 or higher)
+- Node.js (`24.x`, per `package.json` `engines`)
 - npm or yarn
 
 ### Installation
@@ -108,9 +108,9 @@ This project uses [dotenv](https://github.com/motdotla/dotenv) for environment v
 
 One-command config for prototype or production (combined approach):
 
-| Script | Effect |
-|--------|--------|
-| `npm run env:prototype` | Copies `env.prototype` to `.env` (in-memory, no Postgres/Redis) |
+| Script                   | Effect                                                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| `npm run env:prototype`  | Copies `env.prototype` to `.env` (in-memory, no Postgres/Redis)                        |
 | `npm run env:production` | Copies `env.production` to `.env` (then set `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`) |
 
 Then run `npm run dev` or `npm start` as usual. For a **prototype-only build** (smaller bundle, no Prisma/BullMQ in the artifact): `npm run build:prototype` then `npm run start:prototype` (uses `env.prototype` by default).
@@ -145,21 +145,21 @@ AUTO_MAP_SESSION_BY_IP=true
 
 Optional environment variables for persistent storage and production-style features:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `STORAGE` | `memory` | `memory` = in-memory only; `prisma` = PostgreSQL via Prisma |
-| `DATABASE_URL` | — | Required when `STORAGE=prisma`. PostgreSQL connection string |
-| `REDIS_URL` | — | Redis URL for BullMQ (when `ENABLE_QUEUE=true`) |
-| `ENABLE_QUEUE` | `false` | `true` = enable BullMQ (email worker, trackable-job worker) |
-| `JWT_SECRET` | — | Secret for JWT signing. Generate with `openssl rand -hex 32` |
-| `JWT_EXPIRATION` | `1h` | JWT token expiry |
-| `AUTH_MODE` | `prototype` | `prototype` = IP/session isolation; `full` = JWT required for CMS/task/session routes |
+| Variable         | Default     | Description                                                                           |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------- |
+| `STORAGE`        | `memory`    | `memory` = in-memory only; `prisma` = PostgreSQL via Prisma                           |
+| `DATABASE_URL`   | —           | Required when `STORAGE=prisma`. PostgreSQL connection string                          |
+| `REDIS_URL`      | —           | Redis URL for BullMQ (when `ENABLE_QUEUE=true`)                                       |
+| `ENABLE_QUEUE`   | `false`     | `true` = enable BullMQ (email worker, trackable-job worker)                           |
+| `JWT_SECRET`     | —           | Secret for JWT signing. Generate with `openssl rand -hex 32`                          |
+| `JWT_EXPIRATION` | `1h`        | JWT token expiry                                                                      |
+| `AUTH_MODE`      | `prototype` | `prototype` = IP/session isolation; `full` = JWT required for CMS/task/session routes |
 
 **Quick start with PostgreSQL + Redis:**
 
 ```bash
-# Start Postgres and Redis (project name: nteb; use -d to run in background)
-docker compose -p nteb -f docker-compose-db.yml up
+# Start Postgres and Redis (project name: nteb; runs in background)
+docker compose -p nteb -f docker-compose-db.yml up -d
 
 # Run migrations
 npx prisma migrate dev --name init
@@ -267,6 +267,9 @@ When `STORAGE=prisma` and `ENABLE_QUEUE=true`:
 - `npm run start:prototype` - Start prototype server (uses `env.prototype`; run `build:prototype` first)
 - `npm run env:prototype` - Copy `env.prototype` to `.env`
 - `npm run env:production` - Copy `env.production` to `.env`
+- `npm run format` - Format codebase with Prettier
+- `npm run format:check` - Check formatting with Prettier
+- `npm run lint` - Run formatting check (project lint gate)
 - `npm test` - Run tests (in-memory only; integration tests excluded)
 - `npm run test:integration` - Run integration tests (Prisma + Redis; requires `docker compose -p nteb -f docker-compose-db.yml up` and migrations)
 - `npm run start:watch` - Start with nodemon for development
@@ -282,13 +285,16 @@ Tests respect the combined approach (prototype vs production):
 **Run integration tests:**
 
 ```bash
-# 1. Start Postgres + Redis (project name: nteb; use -d to run in background)
-docker compose -p nteb -f docker-compose-db.yml up
+# 1. Start Postgres + Redis (project name: nteb; runs in background)
+docker compose -p nteb -f docker-compose-db.yml up -d
 
-# 2. Apply migrations (first time or after schema changes)
+# 2. Copy sample env file (first time; skip if already done)
+cp env.example .env
+
+# 3. Apply migrations (first time or after schema changes)
 npx prisma migrate deploy
 
-# 3. Run integration tests
+# 4. Run integration tests
 npm run test:integration
 ```
 
@@ -333,7 +339,7 @@ This project includes a multi-stage Dockerfile for both **production** and **dev
    docker run --rm -p 3000:3000 -e ENV_FILE=env.docker --name node-ts-express-base node-ts-express-base
    ```
 
-   - **`--env-file env.docker`** – loads Docker-specific environment variables (includes IP restrictions for Docker networking)
+   - **`-e ENV_FILE=env.docker`** – tells the app to load Docker-specific environment variables (includes Docker IP restrictions)
    - **`-p 3000:3000`** – maps container port 3000 to host port 3000
    - The app runs using `npm start` from `package.json`
 
@@ -415,32 +421,32 @@ When you need persistence and production-style features, enable the optional sta
 
 Base path: `/api/v1/users`. User routes are always mounted; register/login do not require auth.
 
-| Endpoint | Auth | Description |
-|----------|------|-------------|
-| `POST /api/v1/users/register` | — | Register with email and password; returns user + JWT |
-| `POST /api/v1/users/login` | — | Login; returns user + JWT |
-| `GET /api/v1/users/config` | JWT | Get user config |
-| `PUT /api/v1/users/config` | JWT | Update user config |
+| Endpoint                      | Auth | Description                                          |
+| ----------------------------- | ---- | ---------------------------------------------------- |
+| `POST /api/v1/users/register` | —    | Register with email and password; returns user + JWT |
+| `POST /api/v1/users/login`    | —    | Login; returns user + JWT                            |
+| `GET /api/v1/users/config`    | JWT  | Get user config                                      |
+| `PUT /api/v1/users/config`    | JWT  | Update user config                                   |
 
 ### Job API
 
 Base path: `/api/v1/jobs`. **Only mounted when** `STORAGE=prisma` and `ENABLE_QUEUE=true`. All job routes require JWT.
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/v1/jobs` | Create a job (type, arguments; admins can create system jobs with `system: true`) |
-| `POST /api/v1/jobs/start-dummy-job` | Create and enqueue a dummy job (configurable delay) |
-| `GET /api/v1/jobs` | List jobs (user-scoped; admins see all) |
-| `GET /api/v1/jobs/:id` | Get job by ID |
+| Endpoint                            | Description                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| `POST /api/v1/jobs`                 | Create a job (type, arguments; admins can create system jobs with `system: true`) |
+| `POST /api/v1/jobs/start-dummy-job` | Create and enqueue a dummy job (configurable delay)                               |
+| `GET /api/v1/jobs`                  | List jobs (user-scoped; admins see all)                                           |
+| `GET /api/v1/jobs/:id`              | Get job by ID                                                                     |
 
 **Admin users:** Set `role='admin'` in the User table to list all jobs and create system jobs (`userId=null`).
 
 ### Modes at a Glance
 
-| Mode | `STORAGE` | `AUTH_MODE` | `ENABLE_QUEUE` | Use case |
-|------|-----------|-------------|----------------|----------|
-| **Prototype** | `memory` | `prototype` | `false` | Demos, POCs, no infra |
-| **Production** | `prisma` | `full` | `true` | Persistent users, jobs, JWT auth |
+| Mode           | `STORAGE` | `AUTH_MODE` | `ENABLE_QUEUE` | Use case                         |
+| -------------- | --------- | ----------- | -------------- | -------------------------------- |
+| **Prototype**  | `memory`  | `prototype` | `false`        | Demos, POCs, no infra            |
+| **Production** | `prisma`  | `full`      | `true`         | Persistent users, jobs, JWT auth |
 
 ## 📄 **License**
 

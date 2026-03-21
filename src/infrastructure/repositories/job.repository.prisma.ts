@@ -11,9 +11,9 @@ export class PrismaJobRepository implements IJobRepository {
       userId: entity.userId,
       type: entity.type,
       status: entity.status as JobStatus,
-      meta: entity.meta as Record<string, unknown> | undefined ?? undefined,
-      result: entity.result as Record<string, unknown> | undefined ?? undefined,
-      error: entity.error as Record<string, unknown> | undefined ?? undefined,
+      meta: (entity.meta as Record<string, unknown> | undefined) ?? undefined,
+      result: (entity.result as Record<string, unknown> | undefined) ?? undefined,
+      error: (entity.error as Record<string, unknown> | undefined) ?? undefined,
       bullJobId: entity.bullJobId ?? undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
@@ -59,10 +59,7 @@ export class PrismaJobRepository implements IJobRepository {
     return this.toDomain(job);
   }
 
-  async listByUserId(
-    userId: string,
-    opts?: { status?: JobStatus; limit?: number; offset?: number }
-  ): Promise<Job[]> {
+  async listByUserId(userId: string, opts?: { status?: JobStatus; limit?: number; offset?: number }): Promise<Job[]> {
     const jobs = await this.prisma.job.findMany({
       where: { userId, ...(opts?.status && { status: opts.status }) },
       orderBy: { createdAt: 'desc' },

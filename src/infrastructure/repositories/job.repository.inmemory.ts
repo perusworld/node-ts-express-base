@@ -35,10 +35,7 @@ export class InMemoryJobRepository implements IJobRepository {
     return updated;
   }
 
-  async listByUserId(
-    userId: string,
-    opts?: { status?: JobStatus; limit?: number; offset?: number }
-  ): Promise<Job[]> {
+  async listByUserId(userId: string, opts?: { status?: JobStatus; limit?: number; offset?: number }): Promise<Job[]> {
     let list = Array.from(this.jobs.values()).filter(j => j.userId === userId);
     if (opts?.status) list = list.filter(j => j.status === opts.status);
     list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
