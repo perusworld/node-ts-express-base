@@ -83,7 +83,7 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "bcryptjs": "^3.0.3",
-    "body-parser": "^2.2.2",
+    "body-parser": "^2.3.0",
     "bullmq": "^5.76.4",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
